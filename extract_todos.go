@@ -25,12 +25,12 @@ func hashTodo(todo Todo) string {
 	return hex.EncodeToString(h[:])
 }
 
-func saveTodo(db *bolt.DB, todo Todo) (bool, error) {
+func saveTodo(db *bolt.DB, todo Todo, projectName string) (bool, error) {
 	id := hashTodo(todo)
 	var saved bool
 
 	err := db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte("todos"))
+		b, err := tx.CreateBucketIfNotExists([]byte(projectName))
 		if err != nil {
 			return err
 		}
@@ -52,7 +52,9 @@ func main() {
 	//var todos []Todo
 	//TODO Implement this is a flag
 	root := "/home/chrode/workspace/github.com/K-Road/discord-moodbot/"
+	projectName := filepath.Base(strings.TrimRight(root, string(os.PathSeparator)))
 	fmt.Println(root)
+	fmt.Println(projectName)
 
 	//Open bolt db
 	db, err := bolt.Open("todos.db", 0600, nil)
@@ -79,14 +81,18 @@ func main() {
 		for scanner.Scan() {
 			line := scanner.Text()
 			trimmed := strings.TrimSpace(line)
+			relPath, err := filepath.Rel(root, path)
+			if err != nil {
+				relPath = path
+			}
 			if strings.HasPrefix(trimmed, "//TODO") {
 				todo := Todo{
-					File: path,
+					File: relPath,
 					Line: lineNum,
 					Text: strings.TrimSpace(trimmed[len("//TODO"):]),
 				}
 				//Check if duplicate
-				if saved, err := saveTodo(db, todo); err != nil {
+				if saved, err := saveTodo(db, todo, projectName); err != nil {
 					log.Println("Failed to save TODO:", err)
 				} else if saved {
 					fmt.Printf("New TODO saved: %s:%d %s\n", todo.File, todo.Line, todo.Text)
@@ -96,23 +102,18 @@ func main() {
 		}
 		return nil
 	})
+	//DEBUG to list all entries
 	viewTodos(db)
-	//DEBUG Replaced with db saving. Change to print all DB entries
-	// for _, todo := range todos {
-	// 	fmt.Printf("gh issue create --title \"%s\" --body \"Found in %s:%d\"\n", todo.Text, todo.File, todo.Line)
-	// }
 }
 
 func viewTodos(db *bolt.DB) {
 	err := db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("todos"))
-		if b == nil {
-			fmt.Println("Not todos bucket found")
-			return nil
-		}
-		return b.ForEach(func(k, v []byte) error {
-			fmt.Printf("TODO: %s\n", v)
-			return nil
+		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
+			fmt.Printf("Project: %s\n", name)
+			return b.ForEach(func(k, v []byte) error {
+				fmt.Printf(" - %s\n", v)
+				return nil
+			})
 		})
 	})
 	if err != nil {
