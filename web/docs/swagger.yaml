@@ -1,0 +1,40 @@
+info:
+  contact: {}
+paths:
+  /api/projects:
+    get:
+      description: Returns a list of project buckets
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get all project names
+      tags:
+      - Projects
+  /api/projects/{name}/todos:
+    get:
+      description: Returns a list of project todos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get all todos
+      tags:
+      - Todos
+swagger: "2.0"

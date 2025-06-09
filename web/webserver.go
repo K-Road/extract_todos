@@ -9,6 +9,8 @@ import (
 
 	"github.com/K-Road/extract_todos/config"
 	"github.com/K-Road/extract_todos/db"
+	_ "github.com/K-Road/extract_todos/web/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -49,6 +51,8 @@ func main() {
 		apiTodosHandler(w, r, cfg)
 	})
 
+	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
+
 	log.Println("Starting Server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
@@ -68,6 +72,13 @@ func projectsHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config)
 	}
 }
 
+// @Summary Get all project names
+// @Description Returns a list of project buckets
+// @Tags Projects
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {string} string
+// @Router /api/projects [get]
 func apiProjectHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 	buckets, err := db.ListBuckets(cfg.DB)
 	if err != nil {
@@ -101,6 +112,13 @@ func todosHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 	}
 }
 
+// @Summary Get all todos
+// @Description Returns a list of project todos
+// @Tags Todos
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {string} string
+// @Router /api/projects/{name}/todos [get]
 func apiTodosHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 	name := r.PathValue("name")
 	todos, err := db.ListProjectTodos(cfg.DB, name)
