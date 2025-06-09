@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TODOs for {{.Project}}</title>
+    </head>
+    <body>
+        <h1>TODOs for {{.Project}}</h1>
+        <a href="/projects">Back to projects</a>
+        <ul>
+            {{range .Todos}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </body>
+</html>
