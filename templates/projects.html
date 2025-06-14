@@ -1,14 +1,46 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="stylesheet" href="/static/styles.css">
         <title>Projects</title>
     </head>
     <body>
+        <div class="theme-toggle">
+  <input type="checkbox" id="theme-switch" />
+  <label for="theme-switch" class="switch">
+    <span class="icon sun">🌞</span>
+    <span class="icon moon">🌙</span>
+    <span class="slider"></span>
+  </label>
+</div>
         <h1>Projects</h1>
         <ul>
             {{range .Projects}}
             <li><a href="/projects/{{.}}/todos">{{.}}</a></li>
             {{end}}
         </ul>
+<script>
+  const toggle = document.getElementById('theme-switch');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const savedTheme = localStorage.getItem('theme');
+
+  // Apply initial theme
+  if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+    document.body.classList.add('dark-mode');
+    toggle.checked = true;
+  }
+
+  toggle.addEventListener('change', function () {
+    if (this.checked) {
+      document.body.classList.add('dark-mode');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-mode');
+      localStorage.setItem('theme', 'light');
+    }
+  });
+</script>
+
+
     </body>
 </html>

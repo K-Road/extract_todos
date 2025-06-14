@@ -36,6 +36,7 @@ func main() {
 	cfg := &config.Config{DB: dbfile}
 
 	mux := http.NewServeMux()
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	mux.HandleFunc("GET /projects", func(w http.ResponseWriter, r *http.Request) {
 		projectsHandler(w, r, cfg)
