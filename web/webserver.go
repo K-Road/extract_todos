@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/K-Road/extract_todos/config"
-	"github.com/K-Road/extract_todos/db"
+	"github.com/K-Road/extract_todos/internal/db"
 	_ "github.com/K-Road/extract_todos/web/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
 	bolt "go.etcd.io/bbolt"

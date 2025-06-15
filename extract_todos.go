@@ -20,7 +20,7 @@ type Todo struct {
 }
 
 func hashTodo(todo Todo) string {
-	s := fmt.Sprintf("%s:%d:%s", todo.File, todo.Line, todo.Text)
+	s := fmt.Sprintf("%s:%s", todo.File, todo.Text)
 	h := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(h[:])
 }
