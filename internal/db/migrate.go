@@ -22,9 +22,19 @@ func hashFileAndText(file, text string) string {
 func MigrateOldKeys(db *bolt.DB, dryRun bool) (int, int, error) {
 	insertedCount := 0
 	deletedCount := 0
+	buckets := 0
+	err := db.View(func(tx *bolt.Tx) error {
+		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error {
+			fmt.Println("Found bucket:", string(name))
+			buckets++
+			return nil
+		})
+	})
+	fmt.Println("Total buckets:", buckets)
 
-	err := db.Update(func(tx *bolt.Tx) error {
+	err = db.Update(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(bucketName []byte, b *bolt.Bucket) error {
+			fmt.Println(tx)
 			toMigrate := make(map[string]string)
 			oldToNew := make(map[string]string)
 
@@ -47,6 +57,7 @@ func MigrateOldKeys(db *bolt.DB, dryRun bool) (int, int, error) {
 			if err != nil {
 				return err
 			}
+			fmt.Printf("toMigrate: %d\n", len(toMigrate))
 
 			//Insert new keys
 			for newID, val := range toMigrate {
@@ -54,10 +65,10 @@ func MigrateOldKeys(db *bolt.DB, dryRun bool) (int, int, error) {
 					if err := b.Put([]byte(newID), []byte(val)); err != nil {
 						return err
 					}
-					insertedCount++
 				} else {
 					log.Printf("[dry-run] Would insert: key=%s val=%s", newID, val)
 				}
+				insertedCount++
 			}
 
 			//Delete old keys
@@ -66,10 +77,10 @@ func MigrateOldKeys(db *bolt.DB, dryRun bool) (int, int, error) {
 					if err := b.Delete([]byte(oldID)); err != nil {
 						return err
 					}
-					deletedCount++
 				} else {
 					log.Printf("[dry-run] Would delete old key: %s", oldID)
 				}
+				deletedCount++
 			}
 
 			return nil

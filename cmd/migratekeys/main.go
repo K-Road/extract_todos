@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/K-Road/extract_todos/internal/db"
 	bolt "go.etcd.io/bbolt"
@@ -17,12 +19,19 @@ func main() {
 	force := flag.Bool("force", false, "Skip confirmation prompt and proceed with mgiration")
 	flag.Parse()
 
-	dbfile, err := bolt.Open("../../todos.db", 0666, nil)
+	//TODO Add helper to locate projectroot
+	absPath, _ := filepath.Abs("todos.db")
+	fmt.Println("Opening DB at:", absPath)
+
+	//TODO handle lockouts
+	boltdb, err := bolt.Open("todos.db", 0666, &bolt.Options{
+		Timeout: 1 + time.Second,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer dbfile.Close()
-	fmt.Println(("HERE"))
+	defer boltdb.Close()
+
 	if !*dryRun && !*force {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("This will modify the db. Continue? (yes/no): ")
@@ -36,7 +45,7 @@ func main() {
 		}
 	}
 
-	inserted, deleted, err := db.MigrateOldKeys(dbfile, *dryRun)
+	inserted, deleted, err := db.MigrateOldKeys(boltdb, *dryRun)
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
