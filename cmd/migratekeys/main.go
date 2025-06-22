@@ -25,35 +25,52 @@ func main() {
 
 	//TODO handle lockouts
 	boltdb, err := bolt.Open("todos.db", 0666, &bolt.Options{
-		Timeout: 1 + time.Second,
+		Timeout: 2 + time.Second,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer boltdb.Close()
 
-	if !*dryRun && !*force {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("This will modify the db. Continue? (yes/no): ")
-		fmt.Print("> ")
-		os.Stdout.Sync()
-		confirm, _ := reader.ReadString('\n')
-		confirm = strings.TrimSpace(strings.ToLower(confirm))
-		if confirm != "yes" {
-			fmt.Println("Aborted")
-			return
-		}
-	}
-
-	inserted, deleted, err := db.MigrateOldKeys(boltdb, *dryRun)
+	version, err := db.GetDBVersion(boltdb)
 	if err != nil {
-		log.Fatalf("Migration failed: %v", err)
+		log.Fatalf("Failed to read DB version: %v", err)
 	}
 
-	if *dryRun {
-		log.Printf("Dry-run completed. Inserted: %d, Deleted: %d", inserted, deleted)
-	}
-	if inserted != deleted {
-		log.Println("Mismatch between inserted and deleted keys - check logs.")
+	if version != db.CurrentVersion {
+		log.Printf("DB Version is %q, current is %q. Running migration.", version, db.CurrentVersion)
+
+		if !*dryRun && !*force {
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Print("This will modify the db. Continue? (yes/no): ")
+			fmt.Print("> ")
+			os.Stdout.Sync()
+			confirm, _ := reader.ReadString('\n')
+			confirm = strings.TrimSpace(strings.ToLower(confirm))
+			if confirm != "yes" {
+				fmt.Println("Aborted")
+				return
+			}
+		}
+
+		inserted, deleted, err := db.MigrateOldKeys(boltdb, *dryRun)
+		if err != nil {
+			log.Fatalf("Migration failed: %v", err)
+		}
+
+		if *dryRun {
+			log.Printf("Dry-run completed. Inserted: %d, Deleted: %d", inserted, deleted)
+		} else {
+			log.Printf("Migration done. Inserted: %d, Deleted: %d", inserted, deleted)
+			err = db.SetDBVersion(boltdb, db.CurrentVersion)
+			if err != nil {
+				log.Fatalf("Failed to update DB version: %v", err)
+			}
+		}
+		if inserted != deleted {
+			log.Println("Mismatch between inserted and deleted keys - check logs.")
+		}
+	} else {
+		log.Println("DB version is current. Skipping migration.")
 	}
 }

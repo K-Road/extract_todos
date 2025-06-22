@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/K-Road/extract_todos/internal/db"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -57,11 +58,13 @@ func main() {
 	fmt.Println(projectName)
 
 	//Open bolt db
-	db, err := bolt.Open("todos.db", 0600, nil)
+	boltdb, err := bolt.Open("todos.db", 0600, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer boltdb.Close()
+
+	db.CheckDBVersionOrExit(boltdb)
 
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() || !strings.HasSuffix(path, ".go") {
@@ -92,7 +95,7 @@ func main() {
 					Text: strings.TrimSpace(trimmed[len("//TODO"):]),
 				}
 				//Check if duplicate
-				if saved, err := saveTodo(db, todo, projectName); err != nil {
+				if saved, err := saveTodo(boltdb, todo, projectName); err != nil {
 					log.Println("Failed to save TODO:", err)
 				} else if saved {
 					fmt.Printf("New TODO saved: %s:%d %s\n", todo.File, todo.Line, todo.Text)
@@ -103,7 +106,7 @@ func main() {
 		return nil
 	})
 	//DEBUG to list all entries
-	viewTodos(db)
+	viewTodos(boltdb)
 }
 
 func viewTodos(db *bolt.DB) {
