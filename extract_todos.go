@@ -10,23 +10,18 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/K-Road/extract_todos/config"
 	"github.com/K-Road/extract_todos/internal/db"
 	bolt "go.etcd.io/bbolt"
 )
 
-type Todo struct {
-	File string
-	Line int
-	Text string
-}
-
-func hashTodo(todo Todo) string {
+func hashTodo(todo config.Todo) string {
 	s := fmt.Sprintf("%s:%s", todo.File, todo.Text)
 	h := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(h[:])
 }
 
-func saveTodo(db *bolt.DB, todo Todo, projectName string) (bool, error) {
+func saveTodo(db *bolt.DB, todo config.Todo, projectName string) (bool, error) {
 	id := hashTodo(todo)
 	var saved bool
 
@@ -89,7 +84,7 @@ func main() {
 				relPath = path
 			}
 			if strings.HasPrefix(trimmed, "//TODO") {
-				todo := Todo{
+				todo := config.Todo{
 					File: relPath,
 					Line: lineNum,
 					Text: strings.TrimSpace(trimmed[len("//TODO"):]),

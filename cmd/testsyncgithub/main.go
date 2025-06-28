@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -40,9 +41,21 @@ func main() {
 
 	owner := "K-Road"
 	repo := project
+	ctx := context.Background()
+
+	client := githubsync.NewGitHubClient()
+	if client == nil {
+		log.Fatal("Failed to create GitHub client")
+	}
+
+	//Fetch existing issues to avoid duplicates
+	existingIssues, err := githubsync.FetchIssues(ctx, client, owner, repo)
+	if err != nil {
+		log.Fatalf("Failed to fetch existing issues: %v", err)
+	}
 
 	for _, todo := range todos {
-		err := githubsync.CreateIssue(githubsync.NewGitHubClient(), owner, repo, todo, "Created from local todos")
+		err := githubsync.CreateIssueIfNotExists(ctx, client, owner, repo, todo, "Created from local todos", existingIssues)
 		if err != nil {
 			log.Printf("Failed to create issue for: %s. Error: %v\n", todo, err)
 			continue

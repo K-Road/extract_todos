@@ -3,7 +3,10 @@ package db
 import (
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 
+	"github.com/K-Road/extract_todos/config"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -67,15 +70,27 @@ func ListBuckets(db *bolt.DB) ([]string, error) {
 	return buckets, nil
 }
 
-func ListProjectTodos(db *bolt.DB, name string) ([]string, error) {
-	var todos []string
+func FetchProjectTodos(db *bolt.DB, name string) ([]config.Todo, error) {
+	var todos []config.Todo
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(name))
 		if b == nil {
 			return fmt.Errorf("project bucket %q not found", name)
 		}
 		return b.ForEach(func(k, v []byte) error {
-			todos = append(todos, string(v))
+			parts := strings.SplitN(string(v), ":", 3)
+			if len(parts) != 3 {
+				return fmt.Errorf("invalid todo format in bucket %q: %s", name, v)
+			}
+			line, err := strconv.Atoi(parts[1])
+			if err != nil {
+				return fmt.Errorf("invalid line number in todo %q: %v", string(k), err)
+			}
+			todos = append(todos, config.Todo{
+				File: parts[0],
+				Line: line,
+				Text: parts[2],
+			})
 			return nil
 		})
 	})

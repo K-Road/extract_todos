@@ -98,7 +98,7 @@ func apiProjectHandler(w http.ResponseWriter, r *http.Request, cfg *config.Confi
 
 func todosHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 	name := r.PathValue("name")
-	todos, err := db.ListProjectTodos(cfg.DB, name)
+	todos, err := db.FetchProjectTodos(cfg.DB, name)
 	if err != nil {
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
@@ -122,7 +122,7 @@ func todosHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 // @Router /api/projects/{name}/todos [get]
 func apiTodosHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 	name := r.PathValue("name")
-	todos, err := db.ListProjectTodos(cfg.DB, name)
+	todos, err := db.FetchProjectTodos(cfg.DB, name)
 	if err != nil {
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
