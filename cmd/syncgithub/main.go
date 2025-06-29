@@ -63,9 +63,13 @@ func main() {
 		fmt.Println("Retagging existing issues...")
 
 		//uncomment the line below to update existing issues with new labels
+		updateValue := []string{}
 		//updateValue := []string{"todo", "sync-generated"} //labels to add
-		updateValue := []string{"Created from local todos - Line#"} //labels to add
-
+		//updateValue := []string{"Created from local todos - Line#"} //labels to add
+		if updateValue == nil {
+			log.Print("Update value is nil, skipping update...\n")
+			return
+		}
 		for _, issue := range existingIssues {
 			err := githubsync.UpdateIssueIfNeeded(ctx, client, owner, repo, issue, *retag, updateValue)
 			if err != nil {
