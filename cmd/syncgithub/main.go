@@ -65,8 +65,8 @@ func main() {
 		//uncomment the line below to update existing issues with new labels
 		updateValue := []string{}
 		//updateValue := []string{"todo", "sync-generated"} //labels to add
-		//updateValue := []string{"Created from local todos - Line#"} //labels to add
-		if updateValue == nil {
+		//updateValue := []string{"Created from local todos - Line#"} //body to add
+		if len(updateValue) == 0 {
 			log.Print("Update value is nil, skipping update...\n")
 			return
 		}
