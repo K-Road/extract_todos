@@ -46,6 +46,7 @@ func saveTodo(db *bolt.DB, todo config.Todo, projectName string) (bool, error) {
 
 func main() {
 	//var todos []Todo
+	var scannedTodos []config.Todo
 	//TODO Implement this is a flag
 	root := "/home/chrode/workspace/github.com/K-Road/discord-moodbot/"
 	projectName := filepath.Base(strings.TrimRight(root, string(os.PathSeparator)))
@@ -89,6 +90,7 @@ func main() {
 					Line: lineNum,
 					Text: strings.TrimSpace(trimmed[len("//TODO"):]),
 				}
+				scannedTodos = append(scannedTodos, todo) // Collect all todos for delete sync
 				//Check if duplicate
 				if saved, err := saveTodo(boltdb, todo, projectName); err != nil {
 					log.Println("Failed to save TODO:", err)
@@ -102,6 +104,39 @@ func main() {
 	})
 	//DEBUG to list all entries
 	viewTodos(boltdb)
+
+	err = removeTodos(boltdb, projectName, scannedTodos)
+}
+
+func removeTodos(boltdb *bolt.DB, projectName string, scannedTodos []config.Todo) error {
+	storedTodos, err := db.FetchProjectTodos(boltdb, projectName)
+	if err != nil {
+		return fmt.Errorf("failed to fetch todos for project %s: %w", projectName, err)
+	}
+	scannedIDs := make(map[string]struct{})
+	for _, todo := range scannedTodos {
+		id := hashTodo(todo)
+		scannedIDs[id] = struct{}{}
+	}
+
+	for _, todo := range storedTodos {
+		id := hashTodo(todo)
+		if _, exists := scannedIDs[id]; !exists {
+			log.Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
+
+			// //Delete from bolt db
+			// if err := db.DeleteTodoById(boltdb, projectName, id); err != nil {
+			// 	log.Printf("Failed to delete from DB: %v", err)
+			// }
+
+			// //Close github issue if open
+			// title := fmt.Sprintf("%s:%s", todo.File, todo.Text)
+			// //TODO implement githubclose
+			// //githubsync.CloseIssueIfExists(title, projectName)
+
+		}
+	}
+	return nil
 }
 
 func viewTodos(db *bolt.DB) {
