@@ -101,3 +101,16 @@ func FetchProjectTodos(db *bolt.DB, name string) ([]config.Todo, error) {
 
 	return todos, err
 }
+
+func DeleteTodoById(bdb *bolt.DB, projectName, id string) error {
+	return bdb.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(projectName))
+		if b == nil {
+			return fmt.Errorf("project bucket %q not found", projectName)
+		}
+		if err := b.Delete([]byte(id)); err != nil {
+			return fmt.Errorf("failed to delete todo %q from project %q: %w", id, projectName, err)
+		}
+		return nil
+	})
+}

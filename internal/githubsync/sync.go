@@ -3,6 +3,7 @@ package githubsync
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -22,10 +23,11 @@ func CreateIssueIfNotExists(ctx context.Context, client *github.Client, owner, r
 	if _, found := existingIssues[todoTitle]; found {
 		return fmt.Errorf("Issue already exists: %s\n", todoTitle)
 	}
-
+	labels := []string{"todo", "sync-generated"}
 	issue := &github.IssueRequest{
-		Title: &todoTitle,
-		Body:  &body,
+		Title:  &todoTitle,
+		Body:   &body,
+		Labels: &labels,
 	}
 
 	_, _, err := client.Issues.Create(ctx, owner, repo, issue)
@@ -94,4 +96,37 @@ func UpdateIssueIfNeeded(ctx context.Context, client *github.Client, owner, repo
 	default:
 		return fmt.Errorf("unsupported update field: %s", updateField)
 	}
+}
+
+// List github issues that aren't in the list of todos
+// Interate over the issues to check if they have a sync-generated label
+// close issue if it exists and it is not in the list of todos
+func CloseDeletedTodos(ctx context.Context, client *github.Client, owner, repo, project string, todos map[string]struct{}) error {
+	existingIssues, err := FetchAllOpenIssues(ctx, client, owner, repo)
+	if err != nil {
+		return fmt.Errorf("failed to fetch existing issues: %w", err)
+	}
+
+	for title, issue := range existingIssues {
+		if _, exists := todos[title]; !exists && issue.GetState() == "open" {
+			err := CloseIssueIfExists(ctx, client, owner, repo, issue.GetNumber())
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func CloseIssueIfExists(ctx context.Context, client *github.Client, owner, repo string, issueNumber int) error {
+	issueRequest := &github.IssueRequest{
+		State: github.String("closed"),
+	}
+
+	_, _, err := client.Issues.Edit(ctx, owner, repo, issueNumber, issueRequest)
+	if err != nil {
+		return fmt.Errorf("failed to close issue #%d: %w", issueNumber, err)
+	}
+	log.Printf("Closed issue #%d\n", issueNumber)
+	return nil
 }

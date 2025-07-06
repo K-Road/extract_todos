@@ -21,11 +21,11 @@ func hashTodo(todo config.Todo) string {
 	return hex.EncodeToString(h[:])
 }
 
-func saveTodo(db *bolt.DB, todo config.Todo, projectName string) (bool, error) {
+func saveTodo(bdb *bolt.DB, todo config.Todo, projectName string) (bool, error) {
 	id := hashTodo(todo)
 	var saved bool
 
-	err := db.Update(func(tx *bolt.Tx) error {
+	err := bdb.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(projectName))
 		if err != nil {
 			return err
@@ -54,13 +54,13 @@ func main() {
 	fmt.Println(projectName)
 
 	//Open bolt db
-	boltdb, err := bolt.Open("todos.db", 0600, nil)
+	bdb, err := bolt.Open("todos.db", 0600, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer boltdb.Close()
+	defer bdb.Close()
 
-	db.CheckDBVersionOrExit(boltdb)
+	db.CheckDBVersionOrExit(bdb)
 
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() || !strings.HasSuffix(path, ".go") {
@@ -92,7 +92,7 @@ func main() {
 				}
 				scannedTodos = append(scannedTodos, todo) // Collect all todos for delete sync
 				//Check if duplicate
-				if saved, err := saveTodo(boltdb, todo, projectName); err != nil {
+				if saved, err := saveTodo(bdb, todo, projectName); err != nil {
 					log.Println("Failed to save TODO:", err)
 				} else if saved {
 					fmt.Printf("New TODO saved: %s:%d %s\n", todo.File, todo.Line, todo.Text)
@@ -103,13 +103,15 @@ func main() {
 		return nil
 	})
 	//DEBUG to list all entries
-	viewTodos(boltdb)
+	viewTodos(bdb)
 
-	err = removeTodos(boltdb, projectName, scannedTodos)
+	err = removeTodos(bdb, projectName, scannedTodos)
+
+	viewTodos(bdb)
 }
 
-func removeTodos(boltdb *bolt.DB, projectName string, scannedTodos []config.Todo) error {
-	storedTodos, err := db.FetchProjectTodos(boltdb, projectName)
+func removeTodos(bdb *bolt.DB, projectName string, scannedTodos []config.Todo) error {
+	storedTodos, err := db.FetchProjectTodos(bdb, projectName)
 	if err != nil {
 		return fmt.Errorf("failed to fetch todos for project %s: %w", projectName, err)
 	}
@@ -125,22 +127,16 @@ func removeTodos(boltdb *bolt.DB, projectName string, scannedTodos []config.Todo
 			log.Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
 
 			// //Delete from bolt db
-			// if err := db.DeleteTodoById(boltdb, projectName, id); err != nil {
-			// 	log.Printf("Failed to delete from DB: %v", err)
-			// }
-
-			// //Close github issue if open
-			// title := fmt.Sprintf("%s:%s", todo.File, todo.Text)
-			// //TODO implement githubclose
-			// //githubsync.CloseIssueIfExists(title, projectName)
-
+			if err := db.DeleteTodoById(bdb, projectName, id); err != nil {
+				log.Printf("Failed to delete from DB: %v", err)
+			}
 		}
 	}
 	return nil
 }
 
-func viewTodos(db *bolt.DB) {
-	err := db.View(func(tx *bolt.Tx) error {
+func viewTodos(bdb *bolt.DB) {
+	err := bdb.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
 			fmt.Printf("Project: %s\n", name)
 			return b.ForEach(func(k, v []byte) error {

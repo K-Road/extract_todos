@@ -59,6 +59,7 @@ func main() {
 		log.Fatalf("Failed to fetch existing issues: %v", err)
 	}
 
+	//TODO refactor into own function
 	if *retag != "" {
 		fmt.Println("Retagging existing issues...")
 
@@ -80,6 +81,7 @@ func main() {
 		}
 		return
 	}
+	//Create github issues
 	for _, todo := range todos {
 		title := fmt.Sprintf("%s:%s", todo.File, todo.Text)
 		body := fmt.Sprintf("Created from local todos - Line# %d:\n", todo.Line)
@@ -89,6 +91,18 @@ func main() {
 			continue
 		}
 	}
+
+	//Close deleted todos
+	//todos
+	//existingIssues
+	todoSet := make(map[string]struct{})
+	for _, t := range todos {
+		title := fmt.Sprintf("%s:%s", t.File, t.Text)
+		todoSet[title] = struct{}{}
+	}
+
+	githubsync.CloseDeletedTodos(ctx, client, owner, repo, project, todoSet)
+
 }
 
 func getTodos(baseURL, project string) ([]config.Todo, error) {
