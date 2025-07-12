@@ -8,6 +8,10 @@
 *.so
 *.dylib
 
+webserver.log
+webserver.pid
+nohup.out
+
 # Test binary, built with `go test -c`
 *.test
 

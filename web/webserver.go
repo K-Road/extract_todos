@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
 	"text/template"
 	"time"
 
@@ -21,8 +26,19 @@ type ResponseWithTime struct {
 
 var templates *template.Template
 
+const pidFile = "webserver.pid"
+
 func init() {
 	templates = template.Must(template.ParseGlob("templates/*.html"))
+}
+
+func writePIDFile() {
+	pid := os.Getpid()
+	err := os.WriteFile(pidFile, []byte(strconv.Itoa(pid)), 0644)
+	if err != nil {
+		log.Fatalf("Failed to write PID file: %v", err)
+	}
+	log.Printf("PID file written to %s", pidFile)
 }
 
 func main() {
@@ -34,6 +50,10 @@ func main() {
 	defer dbfile.Close()
 
 	cfg := &config.Config{DB: dbfile}
+
+	//TODO move to /tmp
+	writePIDFile()
+	//defer os.Remove(pidFile)
 
 	mux := http.NewServeMux()
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -54,8 +74,30 @@ func main() {
 
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
-	log.Println("Starting Server on :8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+	//run webserver in a goroutine
+	go func() {
+		log.Println("Starting Server on :8080")
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatalf("HTTP server error: %v", err)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	<-stop
+	log.Println("Shutting down webserver...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		log.Printf("Forced shutdown of webserver: %v", err)
+	}
+	os.Remove(pidFile)
+	log.Println("Webserver stopped successfully")
 }
 
 func projectsHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {

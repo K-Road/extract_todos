@@ -7,13 +7,60 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/K-Road/extract_todos/config"
 	"github.com/K-Road/extract_todos/internal/db"
 	bolt "go.etcd.io/bbolt"
 )
+
+// Stops webserver to avoid conflicts
+// Returns true if the server was already running
+func stopWebServer() bool {
+	data, err := os.ReadFile("webserver.pid")
+	if err != nil {
+		log.Printf("Failed to read webserver PID file: %v", err)
+		return false
+	}
+
+	pidStr := strings.TrimSpace(string(data))
+	pid, err := strconv.Atoi(pidStr)
+	if err != nil {
+		log.Printf("Invalid PID in webserver PID file: %v", err)
+		return false
+	}
+
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		log.Printf("Failed to find webserver process with PID %d: %v", pid, err)
+		return false
+	}
+
+	//check if the process is running
+	if err := process.Signal(syscall.Signal(0)); err != nil {
+		log.Printf("Webserver with PID %d is not running: %v", pid, err)
+		_ = os.Remove("webserver.pid")
+		return true
+	}
+	if err = process.Signal(os.Interrupt); err != nil {
+		log.Printf("Failed to send interrupt signal to webserver with PID %d: %v", pid, err)
+		return false
+	}
+	log.Printf("Sent interrupt signal to webserver with PID %d", pid)
+	return true
+}
+
+func startWebServer() error {
+	binaryPath := "./web/webserver.go"
+	cmd := exec.Command("bash", "-c", fmt.Sprintf("nohup go run %s > webserver.log 2>&1 &", binaryPath))
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Start()
+}
 
 func hashTodo(todo config.Todo) string {
 	s := fmt.Sprintf("%s:%s", todo.File, todo.Text)
@@ -52,6 +99,8 @@ func main() {
 	projectName := filepath.Base(strings.TrimRight(root, string(os.PathSeparator)))
 	fmt.Println(root)
 	fmt.Println(projectName)
+
+	wasServerRunning := stopWebServer()
 
 	//Open bolt db
 	bdb, err := bolt.Open("todos.db", 0600, nil)
@@ -108,6 +157,14 @@ func main() {
 	err = removeTodos(bdb, projectName, scannedTodos)
 
 	viewTodos(bdb)
+
+	//Restart webserver
+	if wasServerRunning {
+		log.Println("Restarting webserver...")
+		if err := startWebServer(); err != nil {
+			log.Printf("Failed to start webserver: %v", err)
+		}
+	}
 }
 
 func removeTodos(bdb *bolt.DB, projectName string, scannedTodos []config.Todo) error {
