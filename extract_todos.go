@@ -9,58 +9,58 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"syscall"
+	"time"
 
 	"github.com/K-Road/extract_todos/config"
 	"github.com/K-Road/extract_todos/internal/db"
+	"github.com/K-Road/extract_todos/web"
 	bolt "go.etcd.io/bbolt"
 )
 
 // Stops webserver to avoid conflicts
 // Returns true if the server was already running
-func stopWebServer() bool {
-	data, err := os.ReadFile("webserver.pid")
-	if err != nil {
-		log.Printf("Failed to read webserver PID file: %v", err)
-		return false
-	}
+// func stopWebServer() bool {
+// 	data, err := os.ReadFile("webserver.pid")
+// 	if err != nil {
+// 		log.Printf("Failed to read webserver PID file: %v", err)
+// 		return false
+// 	}
 
-	pidStr := strings.TrimSpace(string(data))
-	pid, err := strconv.Atoi(pidStr)
-	if err != nil {
-		log.Printf("Invalid PID in webserver PID file: %v", err)
-		return false
-	}
+// 	pidStr := strings.TrimSpace(string(data))
+// 	pid, err := strconv.Atoi(pidStr)
+// 	if err != nil {
+// 		log.Printf("Invalid PID in webserver PID file: %v", err)
+// 		return false
+// 	}
 
-	process, err := os.FindProcess(pid)
-	if err != nil {
-		log.Printf("Failed to find webserver process with PID %d: %v", pid, err)
-		return false
-	}
+// 	process, err := os.FindProcess(pid)
+// 	if err != nil {
+// 		log.Printf("Failed to find webserver process with PID %d: %v", pid, err)
+// 		return false
+// 	}
 
-	//check if the process is running
-	if err := process.Signal(syscall.Signal(0)); err != nil {
-		log.Printf("Webserver with PID %d is not running: %v", pid, err)
-		_ = os.Remove("webserver.pid")
-		return true
-	}
-	if err = process.Signal(os.Interrupt); err != nil {
-		log.Printf("Failed to send interrupt signal to webserver with PID %d: %v", pid, err)
-		return false
-	}
-	log.Printf("Sent interrupt signal to webserver with PID %d", pid)
-	return true
-}
+// 	//check if the process is running
+// 	if err := process.Signal(syscall.Signal(0)); err != nil {
+// 		log.Printf("Webserver with PID %d is not running: %v", pid, err)
+// 		_ = os.Remove("webserver.pid")
+// 		return true
+// 	}
+// 	if err = process.Signal(os.Interrupt); err != nil {
+// 		log.Printf("Failed to send interrupt signal to webserver with PID %d: %v", pid, err)
+// 		return false
+// 	}
+// 	log.Printf("Sent interrupt signal to webserver with PID %d", pid)
+// 	return true
+// }
 
-func startWebServer() error {
-	binaryPath := "./web/webserver.go"
-	cmd := exec.Command("bash", "-c", fmt.Sprintf("nohup go run %s > webserver.log 2>&1 &", binaryPath))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Start()
-}
+// func startWebServer() error {
+// 	binaryPath := "./web/webserver.go"
+// 	cmd := exec.Command("bash", "-c", fmt.Sprintf("nohup go run %s > webserver.log 2>&1 &", binaryPath))
+// 	cmd.Stdout = os.Stdout
+// 	cmd.Stderr = os.Stderr
+// 	return cmd.Start()
+// }
 
 func hashTodo(todo config.Todo) string {
 	s := fmt.Sprintf("%s:%s", todo.File, todo.Text)
@@ -100,8 +100,29 @@ func main() {
 	fmt.Println(root)
 	fmt.Println(projectName)
 
-	wasServerRunning := stopWebServer()
+	wasServerRunning := web.IsWebServerRunning()
+	if web.IsWebServerRunning() {
+		log.Println("Webserver is running, stopping it to avoid conflicts...")
+		if err := web.StopWebServer(); err != nil {
+			log.Fatalf("Failed to stop webserver: %v", err)
+		}
+	}
+	// if web.StopWebServer() != nil {
+	// 	log.Println("Webserver not running or already stopped.")
+	// }
+	log.Println("Waiting DB lock...")
+	for i := 0; i < 10; i++ {
+		if !isDBLocked("todos.db") {
+			log.Println("DB is not locked, proceeding...")
+			break
+		}
+		log.Println("DB is locked, waiting...")
+		time.Sleep(500 * time.Millisecond)
+	}
+	//time.Sleep(500 * time.Millisecond)
+	//wasServerRunning := stopWebServer()
 
+	fmt.Println("Opening DB... ")
 	//Open bolt db
 	bdb, err := bolt.Open("todos.db", 0600, nil)
 	if err != nil {
@@ -158,12 +179,19 @@ func main() {
 
 	viewTodos(bdb)
 
+	// if err := web.StartWebServerDetached(); err != nil {
+	// 	log.Printf("Failed to restart webserver: %v", err)
+	// }
+
 	//Restart webserver
 	if wasServerRunning {
 		log.Println("Restarting webserver...")
-		if err := startWebServer(); err != nil {
-			log.Printf("Failed to start webserver: %v", err)
+		if err := web.StartWebServerDetached(); err != nil {
+			log.Printf("Failed to restart webserver: %v", err)
 		}
+		// 	if err := startWebServer(); err != nil {
+		// 		log.Printf("Failed to start webserver: %v", err)
+		// 	}
 	}
 }
 
@@ -205,4 +233,14 @@ func viewTodos(bdb *bolt.DB) {
 	if err != nil {
 		fmt.Println("Erroring reading from DB:", err)
 	}
+}
+
+func isDBLocked(path string) bool {
+	cmd := exec.Command("lsof", path)
+	output, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+	lines := strings.Split(string(output), "\n")
+	return len(lines) > 2 // more than header and one line means still open
 }

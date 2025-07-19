@@ -1,4 +1,4 @@
-package main
+package web
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
+	"strings"
 	"syscall"
 	"text/template"
 	"time"
@@ -25,35 +25,23 @@ type ResponseWithTime struct {
 }
 
 var templates *template.Template
-
-const pidFile = "webserver.pid"
+var server *http.Server
+var dbfile *bolt.DB
 
 func init() {
 	templates = template.Must(template.ParseGlob("templates/*.html"))
 }
 
-func writePIDFile() {
-	pid := os.Getpid()
-	err := os.WriteFile(pidFile, []byte(strconv.Itoa(pid)), 0644)
-	if err != nil {
-		log.Fatalf("Failed to write PID file: %v", err)
-	}
-	log.Printf("PID file written to %s", pidFile)
-}
-
-func main() {
+func StartServer() {
+	var err error
 	//TODO handle flag for db name
-	dbfile, err := bolt.Open("todos.db", 0666, nil)
+	dbfile, err = bolt.Open("todos.db", 0666, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer dbfile.Close()
 
 	cfg := &config.Config{DB: dbfile}
-
-	//TODO move to /tmp
-	writePIDFile()
-	//defer os.Remove(pidFile)
 
 	mux := http.NewServeMux()
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -65,38 +53,53 @@ func main() {
 		todosHandler(w, r, cfg)
 	})
 
-	mux.HandleFunc("GET /api/projects", func(w http.ResponseWriter, r *http.Request) {
+	apiMux := http.NewServeMux()
+	apiMux.HandleFunc("/api/projects", func(w http.ResponseWriter, r *http.Request) {
 		apiProjectHandler(w, r, cfg)
 	})
-	mux.HandleFunc("GET /api/projects/{name}/todos", func(w http.ResponseWriter, r *http.Request) {
-		apiTodosHandler(w, r, cfg)
+	apiMux.HandleFunc("/api/projects/", func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/todos") {
+			apiTodosHandler(w, r, cfg)
+			return
+		}
+		http.NotFound(w, r)
 	})
+	mux.Handle("/api/", AuthenticateAPIKey(apiMux))
 
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
-	server := &http.Server{
+	server = &http.Server{
 		Addr:    ":8080",
 		Handler: mux,
 	}
-	//run webserver in a goroutine
-	go func() {
-		log.Println("Starting Server on :8080")
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			log.Fatalf("HTTP server error: %v", err)
-		}
-	}()
 
+	//run webserver
+	log.Println("Starting Server on :8080")
+	if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		log.Fatalf("HTTP server error: %v", err)
+	}
+
+	//shutdown handling
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
 	<-stop
+	ShutdownServer()
+}
+
+func ShutdownServer() {
 	log.Println("Shutting down webserver...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
 		log.Printf("Forced shutdown of webserver: %v", err)
 	}
-	os.Remove(pidFile)
+
+	if dbfile != nil {
+		log.Println("Closing database connection...")
+		dbfile.Close()
+	}
+	_ = os.Remove(pidFile)
+	//server.Shutdown(ctx)
 	log.Println("Webserver stopped successfully")
 }
 

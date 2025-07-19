@@ -1,4 +1,4 @@
-package main
+package web
 
 // @title TODO Tracker API
 // @version 1.0

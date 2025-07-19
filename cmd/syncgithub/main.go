@@ -28,6 +28,7 @@ func init() {
 }
 
 func main() {
+	//TODO parse url and projects
 	retag := flag.String("retag", "", "Apply updates to existing issues...")
 	flag.Parse()
 	baseURL := "http://localhost:8080"

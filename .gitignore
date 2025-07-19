@@ -11,6 +11,7 @@
 webserver.log
 webserver.pid
 nohup.out
+/webserver
 
 # Test binary, built with `go test -c`
 *.test
