@@ -38,6 +38,12 @@ func (m model) View() string {
 		s += fmt.Sprintf("💬 %s\n", m.statusMessage)
 	}
 
+	if m.progressVisible {
+		s += fmt.Sprintf("\n%s", m.progress.ViewAs(m.progressPercent))
+	} else if m.statusMessage != "" && m.progressVisible {
+		s += fmt.Sprintf("\n💬 %s", m.statusMessage)
+	}
+
 	s += "\nPress q to quit.\n"
 
 	// if m.statusMessage != "" {

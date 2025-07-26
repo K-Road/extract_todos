@@ -77,3 +77,205 @@
 2025/07/26 16:41:45 control.go:39: Webserver started with PID 150907
 2025/07/26 16:41:54 control.go:58: Sent SIGTERM to process 150907
 2025/07/26 16:41:54 control.go:71: Process 150907 has exited
+2025/07/26 18:27:53 control.go:39: Webserver started with PID 194845
+2025/07/26 18:28:00 control.go:58: Sent SIGTERM to process 194845
+2025/07/26 18:28:01 control.go:71: Process 194845 has exited
+2025/07/26 18:28:08 control.go:39: Webserver started with PID 195415
+2025/07/26 18:28:11 extract.go:57: /home/chrode/workspace/github.com/K-Road/discord-moodbot/
+2025/07/26 18:28:11 extract.go:58: discord-moodbot
+2025/07/26 18:28:11 extract.go:62: Webserver is running, stopping it to avoid conflicts...
+2025/07/26 18:28:11 control.go:58: Sent SIGTERM to process 195415
+2025/07/26 18:28:11 control.go:71: Process 195415 has exited
+2025/07/26 18:28:11 extract.go:70: Waiting DB lock...
+2025/07/26 18:28:11 extract.go:73: DB is not locked, proceeding...
+2025/07/26 18:28:11 extract.go:82: Opening DB... 
+2025/07/26 18:28:11 extract.go:184: Project: discord-moodbot
+2025/07/26 18:28:11 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 18:28:11 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 18:28:11 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 18:28:11 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 18:28:11 extract.go:184: Project: meta
+2025/07/26 18:28:11 extract.go:186:  - 2
+2025/07/26 18:28:11 extract.go:184: Project: discord-moodbot
+2025/07/26 18:28:11 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 18:28:11 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 18:28:11 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 18:28:11 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 18:28:11 extract.go:184: Project: meta
+2025/07/26 18:28:11 extract.go:186:  - 2
+2025/07/26 18:28:11 extract.go:145: Restarting webserver...
+2025/07/26 18:28:12 control.go:39: Webserver started with PID 195631
+2025/07/26 18:28:34 control.go:58: Sent SIGTERM to process 195631
+2025/07/26 18:28:34 control.go:71: Process 195631 has exited
+2025/07/26 19:16:16 extract.go:57: /home/chrode/workspace/github.com/K-Road/discord-moodbot/
+2025/07/26 19:16:16 extract.go:58: discord-moodbot
+2025/07/26 19:16:16 extract.go:70: Waiting DB lock...
+2025/07/26 19:16:16 extract.go:73: DB is not locked, proceeding...
+2025/07/26 19:16:16 extract.go:82: Opening DB... 
+2025/07/26 19:16:17 extract.go:184: Project: discord-moodbot
+2025/07/26 19:16:17 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 19:16:17 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 19:16:17 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 19:16:17 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 19:16:17 extract.go:184: Project: meta
+2025/07/26 19:16:17 extract.go:186:  - 2
+2025/07/26 19:16:17 extract.go:184: Project: discord-moodbot
+2025/07/26 19:16:17 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 19:16:17 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 19:16:17 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 19:16:17 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 19:16:17 extract.go:184: Project: meta
+2025/07/26 19:16:17 extract.go:186:  - 2
+2025/07/26 19:20:54 extract.go:57: /home/chrode/workspace/github.com/K-Road/discord-moodbot/
+2025/07/26 19:20:54 extract.go:58: discord-moodbot
+2025/07/26 19:20:54 extract.go:70: Waiting DB lock...
+2025/07/26 19:20:54 extract.go:73: DB is not locked, proceeding...
+2025/07/26 19:20:54 extract.go:82: Opening DB... 
+2025/07/26 19:20:55 extract.go:184: Project: discord-moodbot
+2025/07/26 19:20:55 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 19:20:55 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 19:20:55 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 19:20:55 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 19:20:55 extract.go:184: Project: meta
+2025/07/26 19:20:55 extract.go:186:  - 2
+2025/07/26 19:20:55 extract.go:184: Project: discord-moodbot
+2025/07/26 19:20:55 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 19:20:55 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 19:20:55 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 19:20:55 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 19:20:55 extract.go:184: Project: meta
+2025/07/26 19:20:55 extract.go:186:  - 2
+2025/07/26 20:58:59 control.go:39: Webserver started with PID 265575
+2025/07/26 20:59:06 extract.go:57: /home/chrode/workspace/github.com/K-Road/discord-moodbot/
+2025/07/26 20:59:06 extract.go:58: discord-moodbot
+2025/07/26 20:59:06 extract.go:62: Webserver is running, stopping it to avoid conflicts...
+2025/07/26 20:59:06 control.go:58: Sent SIGTERM to process 265575
+2025/07/26 20:59:07 control.go:71: Process 265575 has exited
+2025/07/26 20:59:07 extract.go:70: Waiting DB lock...
+2025/07/26 20:59:07 extract.go:73: DB is not locked, proceeding...
+2025/07/26 20:59:07 extract.go:82: Opening DB... 
+2025/07/26 20:59:07 extract.go:184: Project: discord-moodbot
+2025/07/26 20:59:07 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 20:59:07 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 20:59:07 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 20:59:07 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 20:59:07 extract.go:184: Project: meta
+2025/07/26 20:59:07 extract.go:186:  - 2
+2025/07/26 20:59:07 extract.go:184: Project: discord-moodbot
+2025/07/26 20:59:07 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 20:59:07 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 20:59:07 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 20:59:07 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 20:59:07 extract.go:184: Project: meta
+2025/07/26 20:59:07 extract.go:186:  - 2
+2025/07/26 20:59:07 extract.go:145: Restarting webserver...
+2025/07/26 20:59:08 control.go:39: Webserver started with PID 265789
+2025/07/26 20:59:14 control.go:58: Sent SIGTERM to process 265789
+2025/07/26 20:59:14 control.go:71: Process 265789 has exited
+2025/07/26 21:01:23 control.go:39: Webserver started with PID 267730
+2025/07/26 21:04:44 control.go:58: Sent SIGTERM to process 267730
+2025/07/26 21:04:44 control.go:71: Process 267730 has exited
+2025/07/26 21:06:46 control.go:39: Webserver started with PID 271971
+2025/07/26 21:07:58 control.go:58: Sent SIGTERM to process 271971
+2025/07/26 21:07:59 control.go:71: Process 271971 has exited
+2025/07/26 21:09:14 control.go:39: Webserver started with PID 274312
+2025/07/26 21:09:18 control.go:58: Sent SIGTERM to process 274312
+2025/07/26 21:09:19 control.go:71: Process 274312 has exited
+2025/07/26 21:09:50 control.go:39: Webserver started with PID 275293
+2025/07/26 21:09:54 control.go:58: Sent SIGTERM to process 275293
+2025/07/26 21:09:54 control.go:71: Process 275293 has exited
+2025/07/26 21:09:57 extract.go:57: /home/chrode/workspace/github.com/K-Road/discord-moodbot/
+2025/07/26 21:09:57 extract.go:58: discord-moodbot
+2025/07/26 21:09:57 extract.go:70: Waiting DB lock...
+2025/07/26 21:09:57 extract.go:73: DB is not locked, proceeding...
+2025/07/26 21:09:57 extract.go:82: Opening DB... 
+2025/07/26 21:09:57 extract.go:184: Project: discord-moodbot
+2025/07/26 21:09:57 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 21:09:57 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 21:09:57 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 21:09:57 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 21:09:57 extract.go:184: Project: meta
+2025/07/26 21:09:57 extract.go:186:  - 2
+2025/07/26 21:09:57 extract.go:184: Project: discord-moodbot
+2025/07/26 21:09:57 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 21:09:57 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 21:09:57 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 21:09:57 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 21:09:57 extract.go:184: Project: meta
+2025/07/26 21:09:57 extract.go:186:  - 2
+2025/07/26 21:10:35 control.go:39: Webserver started with PID 275759
+2025/07/26 21:20:35 control.go:58: Sent SIGTERM to process 275759
+2025/07/26 21:20:36 control.go:71: Process 275759 has exited
+2025/07/26 21:20:40 control.go:39: Webserver started with PID 280816
+2025/07/26 21:21:27 extract.go:57: /home/chrode/workspace/github.com/K-Road/discord-moodbot/
+2025/07/26 21:21:27 extract.go:58: discord-moodbot
+2025/07/26 21:21:27 extract.go:62: Webserver is running, stopping it to avoid conflicts...
+2025/07/26 21:21:27 control.go:58: Sent SIGTERM to process 280816
+2025/07/26 21:21:27 control.go:71: Process 280816 has exited
+2025/07/26 21:21:27 extract.go:70: Waiting DB lock...
+2025/07/26 21:21:28 extract.go:73: DB is not locked, proceeding...
+2025/07/26 21:21:28 extract.go:82: Opening DB... 
+2025/07/26 21:21:28 extract.go:184: Project: discord-moodbot
+2025/07/26 21:21:28 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 21:21:28 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 21:21:28 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 21:21:28 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 21:21:28 extract.go:184: Project: meta
+2025/07/26 21:21:28 extract.go:186:  - 2
+2025/07/26 21:21:28 extract.go:184: Project: discord-moodbot
+2025/07/26 21:21:28 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 21:21:28 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 21:21:28 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 21:21:28 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 21:21:28 extract.go:184: Project: meta
+2025/07/26 21:21:28 extract.go:186:  - 2
+2025/07/26 21:21:28 extract.go:145: Restarting webserver...
+2025/07/26 21:21:30 control.go:39: Webserver started with PID 281393
+2025/07/26 21:21:34 control.go:58: Sent SIGTERM to process 281393
+2025/07/26 21:21:34 control.go:71: Process 281393 has exited
+2025/07/26 21:31:40 control.go:39: Webserver started with PID 288440
+2025/07/26 21:31:48 extract.go:57: /home/chrode/workspace/github.com/K-Road/discord-moodbot/
+2025/07/26 21:31:48 extract.go:58: discord-moodbot
+2025/07/26 21:31:48 extract.go:62: Webserver is running, stopping it to avoid conflicts...
+2025/07/26 21:31:48 control.go:58: Sent SIGTERM to process 288440
+2025/07/26 21:31:48 control.go:71: Process 288440 has exited
+2025/07/26 21:31:48 extract.go:70: Waiting DB lock...
+2025/07/26 21:31:48 extract.go:73: DB is not locked, proceeding...
+2025/07/26 21:31:48 extract.go:82: Opening DB... 
+2025/07/26 21:31:48 extract.go:184: Project: discord-moodbot
+2025/07/26 21:31:48 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 21:31:48 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 21:31:48 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 21:31:48 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 21:31:48 extract.go:184: Project: meta
+2025/07/26 21:31:48 extract.go:186:  - 2
+2025/07/26 21:31:48 extract.go:184: Project: discord-moodbot
+2025/07/26 21:31:48 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 21:31:48 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 21:31:48 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 21:31:48 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 21:31:48 extract.go:184: Project: meta
+2025/07/26 21:31:48 extract.go:186:  - 2
+2025/07/26 21:31:48 extract.go:145: Restarting webserver...
+2025/07/26 21:31:49 control.go:39: Webserver started with PID 288650
+2025/07/26 21:31:53 control.go:58: Sent SIGTERM to process 288650
+2025/07/26 21:31:53 control.go:71: Process 288650 has exited
+2025/07/26 21:33:00 extract.go:57: /home/chrode/workspace/github.com/K-Road/discord-moodbot/
+2025/07/26 21:33:00 extract.go:58: discord-moodbot
+2025/07/26 21:33:00 extract.go:70: Waiting DB lock...
+2025/07/26 21:33:00 extract.go:73: DB is not locked, proceeding...
+2025/07/26 21:33:00 extract.go:82: Opening DB... 
+2025/07/26 21:33:00 extract.go:184: Project: discord-moodbot
+2025/07/26 21:33:00 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 21:33:00 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 21:33:00 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 21:33:00 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 21:33:00 extract.go:184: Project: meta
+2025/07/26 21:33:00 extract.go:186:  - 2
+2025/07/26 21:33:00 extract.go:184: Project: discord-moodbot
+2025/07/26 21:33:00 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 21:33:00 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 21:33:00 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 21:33:00 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 21:33:00 extract.go:184: Project: meta
+2025/07/26 21:33:00 extract.go:186:  - 2

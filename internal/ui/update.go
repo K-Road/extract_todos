@@ -3,6 +3,7 @@ package ui
 import (
 	"time"
 
+	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -40,7 +41,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.webServerRunning = false
 		}
 		if msg != "" {
-			return m, clearStatus()
+			cmds = append(cmds, clearStatus())
+		}
+
+	case tickMsg:
+		if m.progressPercent < 1.0 {
+			m.progressPercent += 0.05
+			cmds = append(cmds, tickProgressBar())
+		} else {
+			m.progressVisible = false
+			m.statusMessage = "Extraction complete"
 		}
 
 	case spinner.TickMsg:
@@ -51,6 +61,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	}
+	var progressCmd tea.Cmd
+	updatedProgress, progressCmd := m.progress.Update(msg)
+	m.progress = updatedProgress.(progress.Model)
+	cmds = append(cmds, progressCmd)
 	return m, tea.Batch(cmds...)
 }
 
@@ -58,16 +72,20 @@ func (m model) handleSelection() (tea.Model, tea.Cmd) {
 	switch m.cursor {
 	case 0:
 		//Extract TODOs
-		m.statusMessage = "Starting extraction..."
+		m.progressVisible = true
+		m.progressPercent = 0
 		m.spinnerRunning = true
+		m.statusMessage = "Starting extraction..."
 		return m, tea.Batch(
 			m.spinner.Tick,
+			tickProgressBar(),
 			StartExtractTodos(),
 		)
 	case 1:
 		//Start web server
 		m.statusMessage = "Starting webserver..."
 		m.spinnerRunning = true
+		m.progressVisible = false
 		return m, tea.Batch(
 			m.spinner.Tick,
 			StartWebServerCmd(),
@@ -75,6 +93,8 @@ func (m model) handleSelection() (tea.Model, tea.Cmd) {
 	case 2:
 		//Stop web server
 		m.statusMessage = "Stopping webserver..."
+		m.spinnerRunning = true
+		m.progressVisible = false
 		return m, tea.Batch(
 			m.spinner.Tick,
 			StopWebServerCmd(),
@@ -98,5 +118,11 @@ func setStatus(msg string) tea.Cmd {
 func clearStatus() tea.Cmd {
 	return tea.Tick(time.Second*3, func(time.Time) tea.Msg {
 		return statusMsg("")
+	})
+}
+
+func tickProgressBar() tea.Cmd {
+	return tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg {
+		return tickMsg{}
 	})
 }
