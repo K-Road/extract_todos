@@ -14,6 +14,7 @@ func main() {
 		log.Fatal(err)
 	}
 	log.SetOutput(logFile)
+	log.SetFlags((log.Ldate | log.Ltime | log.Lshortfile))
 
 	p := tea.NewProgram(ui.InitialModel())
 	if _, err := p.Run(); err != nil {

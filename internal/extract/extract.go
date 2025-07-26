@@ -48,13 +48,14 @@ func saveTodo(bdb *bolt.DB, todo config.Todo, projectName string) (bool, error) 
 }
 
 func Run() error {
+	time.Sleep(2 * time.Second)
 	//var todos []Todo
 	var scannedTodos []config.Todo
 	//TODO Implement this is a flag
 	root := "/home/chrode/workspace/github.com/K-Road/discord-moodbot/"
 	projectName := filepath.Base(strings.TrimRight(root, string(os.PathSeparator)))
-	fmt.Println(root)
-	fmt.Println(projectName)
+	log.Println(root)
+	log.Println(projectName)
 
 	wasServerRunning := web.IsWebServerRunning()
 	if web.IsWebServerRunning() {
@@ -78,7 +79,7 @@ func Run() error {
 	//time.Sleep(500 * time.Millisecond)
 	//wasServerRunning := stopWebServer()
 
-	fmt.Println("Opening DB... ")
+	log.Println("Opening DB... ")
 	//Open bolt db
 	bdb, err := bolt.Open("todos.db", 0600, nil)
 	if err != nil {
@@ -90,10 +91,10 @@ func Run() error {
 
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() || !strings.HasSuffix(path, ".go") {
-			//fmt.Println("Skipping non-Go file:", path)
+			//log.Println("Skipping non-Go file:", path)
 			return nil
 		}
-		//fmt.Println("Processing:", path)
+		//log.Println("Processing:", path)
 
 		f, err := os.Open(path)
 		if err != nil {
@@ -121,7 +122,7 @@ func Run() error {
 				if saved, err := saveTodo(bdb, todo, projectName); err != nil {
 					log.Println("Failed to save TODO:", err)
 				} else if saved {
-					fmt.Printf("New TODO saved: %s:%d %s\n", todo.File, todo.Line, todo.Text)
+					log.Printf("New TODO saved: %s:%d %s\n", todo.File, todo.Line, todo.Text)
 				}
 			}
 			lineNum++
@@ -180,15 +181,15 @@ func removeTodos(bdb *bolt.DB, projectName string, scannedTodos []config.Todo) e
 func viewTodos(bdb *bolt.DB) {
 	err := bdb.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
-			fmt.Printf("Project: %s\n", name)
+			log.Printf("Project: %s\n", name)
 			return b.ForEach(func(k, v []byte) error {
-				fmt.Printf(" - %s\n", v)
+				log.Printf(" - %s\n", v)
 				return nil
 			})
 		})
 	})
 	if err != nil {
-		fmt.Println("Erroring reading from DB:", err)
+		log.Println("Erroring reading from DB:", err)
 	}
 }
 

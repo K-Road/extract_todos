@@ -1,27 +1,48 @@
 package ui
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/K-Road/extract_todos/web"
+)
 
 func (m model) View() string {
+	m.webServerRunning = web.IsWebServerRunning()
 	s := "Select an option:\n\n"
 
 	for i, choice := range m.choices {
 		cursor := " "
-		line := fmt.Sprintf(" %s", choice)
+		label := choice
+		suffix := ""
+
+		if choice == "Start Web Server" && m.webServerRunning {
+			suffix = RunningItemStyle.Render(" (running)")
+		}
+
+		//line := fmt.Sprintf(" %s", choice)
 
 		if m.cursor == i {
 			cursor = ">"
-			line = SelectedItemStyle.Render(fmt.Sprintf("%s %s", cursor, choice))
+			line := SelectedItemStyle.Render(fmt.Sprintf("%s %s", cursor, label)) + suffix
+			s += line + "\n"
 		} else {
-			line = fmt.Sprintf("%s %s", cursor, choice)
+			line := fmt.Sprintf("%s %s%s", cursor, label, suffix)
+			s += line + "\n"
 		}
-		s += line + "\n"
+		//s += line + "\n"
 	}
+
+	if m.spinnerRunning {
+		s += fmt.Sprintf("%s %s\n", m.spinner.View(), m.statusMessage)
+	} else if m.statusMessage != "" {
+		s += fmt.Sprintf("💬 %s\n", m.statusMessage)
+	}
+
 	s += "\nPress q to quit.\n"
 
-	if m.statusMessage != "" {
-		s += m.statusMessage
-	}
+	// if m.statusMessage != "" {
+	// 	s += m.statusMessage
+	// }
 	return s
 
 }

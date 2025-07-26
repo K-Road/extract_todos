@@ -4,3 +4,76 @@
 2025/07/20 20:50:04 Webserver started with PID 220582
 2025/07/20 20:50:08 Sent SIGTERM to process 220582
 2025/07/20 20:50:08 Process 220582 has exited
+2025/07/26 11:07:37 Webserver started with PID 7468
+2025/07/26 11:07:46 Sent SIGTERM to process 7468
+2025/07/26 11:07:46 Process 7468 has exited
+2025/07/26 11:30:13 Webserver started with PID 20487
+2025/07/26 11:30:22 Sent SIGTERM to process 20487
+2025/07/26 11:30:22 Process 20487 has exited
+2025/07/26 11:33:07 Webserver started with PID 21915
+2025/07/26 11:33:17 Sent SIGTERM to process 21915
+2025/07/26 11:33:17 Process 21915 has exited
+2025/07/26 15:03:08 Waiting DB lock...
+2025/07/26 15:03:08 DB is not locked, proceeding...
+2025/07/26 15:18:36 extract.go:57: /home/chrode/workspace/github.com/K-Road/discord-moodbot/
+2025/07/26 15:18:36 extract.go:58: discord-moodbot
+2025/07/26 15:18:36 extract.go:70: Waiting DB lock...
+2025/07/26 15:18:36 extract.go:73: DB is not locked, proceeding...
+2025/07/26 15:18:36 extract.go:82: Opening DB... 
+2025/07/26 15:18:37 extract.go:184: Project: discord-moodbot
+2025/07/26 15:18:37 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 15:18:37 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 15:18:37 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 15:18:37 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 15:18:37 extract.go:184: Project: meta
+2025/07/26 15:18:37 extract.go:186:  - 2
+2025/07/26 15:18:37 extract.go:184: Project: discord-moodbot
+2025/07/26 15:18:37 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 15:18:37 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 15:18:37 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 15:18:37 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 15:18:37 extract.go:184: Project: meta
+2025/07/26 15:18:37 extract.go:186:  - 2
+2025/07/26 15:18:51 extract.go:57: /home/chrode/workspace/github.com/K-Road/discord-moodbot/
+2025/07/26 15:18:51 extract.go:58: discord-moodbot
+2025/07/26 15:18:51 extract.go:70: Waiting DB lock...
+2025/07/26 15:18:52 extract.go:73: DB is not locked, proceeding...
+2025/07/26 15:18:52 extract.go:82: Opening DB... 
+2025/07/26 15:18:52 extract.go:184: Project: discord-moodbot
+2025/07/26 15:18:52 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 15:18:52 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 15:18:52 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 15:18:52 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 15:18:52 extract.go:184: Project: meta
+2025/07/26 15:18:52 extract.go:186:  - 2
+2025/07/26 15:18:52 extract.go:184: Project: discord-moodbot
+2025/07/26 15:18:52 extract.go:186:  - commands.go:14:add allowed channel
+2025/07/26 15:18:52 extract.go:186:  - weather.go:119:possible use as backup for when AI API is down
+2025/07/26 15:18:52 extract.go:186:  - messages.go:132:check why blank
+2025/07/26 15:18:52 extract.go:186:  - messages.go:109:Randomize react rate
+2025/07/26 15:18:52 extract.go:184: Project: meta
+2025/07/26 15:18:52 extract.go:186:  - 2
+2025/07/26 15:39:54 actions.go:15: StartWebServerCmd
+2025/07/26 15:40:49 actions.go:15: StartWebServerCmd
+2025/07/26 15:42:15 actions.go:15: StartWebServerCmd
+2025/07/26 15:51:34 actions.go:16: StartWebServerCmd before if
+2025/07/26 15:51:35 control.go:39: Webserver started with PID 122954
+2025/07/26 15:51:35 actions.go:18: StartWebServerCmd after if
+2025/07/26 15:51:35 actions.go:23: StartWebServerCmd success
+2025/07/26 15:51:51 control.go:58: Sent SIGTERM to process 122954
+2025/07/26 15:51:51 control.go:71: Process 122954 has exited
+2025/07/26 16:27:25 control.go:39: Webserver started with PID 141060
+2025/07/26 16:27:34 control.go:58: Sent SIGTERM to process 141060
+2025/07/26 16:27:34 control.go:71: Process 141060 has exited
+2025/07/26 16:30:44 control.go:39: Webserver started with PID 143128
+2025/07/26 16:30:55 control.go:58: Sent SIGTERM to process 143128
+2025/07/26 16:30:56 control.go:71: Process 143128 has exited
+2025/07/26 16:35:55 control.go:39: Webserver started with PID 145996
+2025/07/26 16:36:08 control.go:58: Sent SIGTERM to process 145996
+2025/07/26 16:36:08 control.go:71: Process 145996 has exited
+2025/07/26 16:40:55 control.go:39: Webserver started with PID 149057
+2025/07/26 16:41:08 control.go:58: Sent SIGTERM to process 149057
+2025/07/26 16:41:09 control.go:71: Process 149057 has exited
+2025/07/26 16:41:45 control.go:39: Webserver started with PID 150907
+2025/07/26 16:41:54 control.go:58: Sent SIGTERM to process 150907
+2025/07/26 16:41:54 control.go:71: Process 150907 has exited
