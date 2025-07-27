@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"text/template"
@@ -39,7 +40,14 @@ func StartServer() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer dbfile.Close()
+
+	// Write PID file here
+	pid := os.Getpid()
+	pidStr := strconv.Itoa(pid)
+	if err := os.WriteFile(pidFile, []byte(pidStr), 0644); err != nil {
+		log.Fatalf("Failed to write PID file: %v", err)
+	}
+	log.Printf("Webserver started with PID %s", pidStr)
 
 	cfg := &config.Config{DB: dbfile}
 
@@ -73,15 +81,18 @@ func StartServer() {
 		Handler: mux,
 	}
 
-	//run webserver
-	log.Println("Starting Server on :8080")
-	if err := server.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatalf("HTTP server error: %v", err)
-	}
-
 	//shutdown handling
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		//run webserver
+		log.Println("Starting Server on :8080")
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatalf("HTTP server error: %v", err)
+		}
+	}()
+
 	<-stop
 	ShutdownServer()
 }

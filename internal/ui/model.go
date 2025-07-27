@@ -18,9 +18,12 @@ type model struct {
 	progress         progress.Model
 	progressVisible  bool
 	progressPercent  float64
+	progressChan     chan tea.Msg
 }
 type tickMsg struct{}
+type progressMsg float64
 type doneExtractingMsg struct{}
+type tickContinueMsg struct{}
 
 func InitialModel() model {
 	s := spinner.New(spinner.WithSpinner(spinner.Dot))

@@ -47,7 +47,7 @@ func saveTodo(bdb *bolt.DB, todo config.Todo, projectName string) (bool, error) 
 	return saved, err
 }
 
-func Run() error {
+func internalRun(updateProgress func(p float64)) error {
 	time.Sleep(2 * time.Second)
 	//var todos []Todo
 	var scannedTodos []config.Todo
@@ -58,7 +58,7 @@ func Run() error {
 	log.Println(projectName)
 
 	wasServerRunning := web.IsWebServerRunning()
-	if web.IsWebServerRunning() {
+	if wasServerRunning {
 		log.Println("Webserver is running, stopping it to avoid conflicts...")
 		if err := web.StopWebServer(); err != nil {
 			return fmt.Errorf("Failed to stop webserver: %v", err)
@@ -89,18 +89,32 @@ func Run() error {
 
 	db.CheckDBVersionOrExit(bdb)
 
+	var goFiles []string
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() || !strings.HasSuffix(path, ".go") {
-			//log.Println("Skipping non-Go file:", path)
-			return nil
+		if err == nil || !info.IsDir() || strings.HasSuffix(path, ".go") {
+			goFiles = append(goFiles, path)
 		}
-		//log.Println("Processing:", path)
+		return nil
+
+	})
+	if err != nil {
+		return err
+	}
+	total := len(goFiles)
+	current := 0
+
+	for _, path := range goFiles {
+		current++
+		if updateProgress != nil {
+			//log.Println("1")
+			updateProgress(float64(current) / float64(total))
+			//log.Println("2")
+		}
 
 		f, err := os.Open(path)
 		if err != nil {
 			return err
 		}
-		defer f.Close()
 
 		scanner := bufio.NewScanner(f)
 		lineNum := 1
@@ -127,8 +141,10 @@ func Run() error {
 			}
 			lineNum++
 		}
-		return nil
-	})
+		f.Close()
+
+	}
+	log.Println("Finished scan")
 	//DEBUG to list all entries
 	viewTodos(bdb)
 
@@ -136,21 +152,23 @@ func Run() error {
 
 	viewTodos(bdb)
 
-	// if err := web.StartWebServerDetached(); err != nil {
-	// 	log.Printf("Failed to restart webserver: %v", err)
-	// }
-
 	//Restart webserver
 	if wasServerRunning {
 		log.Println("Restarting webserver...")
 		if err := web.StartWebServerDetached(); err != nil {
 			log.Printf("Failed to restart webserver: %v", err)
 		}
-		// 	if err := startWebServer(); err != nil {
-		// 		log.Printf("Failed to start webserver: %v", err)
-		// 	}
 	}
+	updateProgress(1)
 	return nil
+}
+
+func Run() error {
+	return internalRun(nil)
+}
+
+func RunWithProgress(updateProgress func(p float64)) error {
+	return internalRun(updateProgress)
 }
 
 func removeTodos(bdb *bolt.DB, projectName string, scannedTodos []config.Todo) error {

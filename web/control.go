@@ -21,22 +21,23 @@ func StartWebServerDetached() error {
 	}
 
 	//start compiled binary in detached mode
-	script := "./webserver > webserver.log 2>&1 & echo $!"
+	script := "./webserver > webserver.log 2>&1 &" //echo $!"
 	cmd := exec.Command("bash", "-c", script)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
-	output, err := cmd.Output()
-	if err != nil {
+	//output, err := cmd.Output()
+	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start webserver: %w", err)
 	}
 
-	//write PID to file
-	pidStr := strings.TrimSpace(string(output))
-	if err = os.WriteFile(pidFile, []byte(pidStr), 0644); err != nil {
-		return fmt.Errorf("failed to write PID file: %w", err)
-	}
+	// //write PID to file
+	// pidStr := strings.TrimSpace(string(output))
+	// if err = os.WriteFile(pidFile, []byte(pidStr), 0644); err != nil {
+	// 	return fmt.Errorf("failed to write PID file: %w", err)
+	// }
 
-	log.Printf("Webserver started with PID %s", pidStr)
+	//log.Printf("Webserver started with PID %s", pidStr)
+	log.Printf("Started webserver detached process with PID %d", cmd.Process.Pid)
 	return nil
 }
 

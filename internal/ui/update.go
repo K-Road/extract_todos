@@ -31,27 +31,33 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case statusMsg:
-		m.statusMessage = string(msg)
 		m.spinnerRunning = false
+		m.statusMessage = string(msg)
 
-		switch string(msg) {
+		switch m.statusMessage {
 		case "Webserver started!✅":
 			m.webServerRunning = true
 		case "Webserver stopped 🛑":
 			m.webServerRunning = false
 		}
-		if msg != "" {
+		if m.statusMessage != "" {
 			cmds = append(cmds, clearStatus())
 		}
 
-	case tickMsg:
-		if m.progressPercent < 1.0 {
-			m.progressPercent += 0.05
-			cmds = append(cmds, tickProgressBar())
-		} else {
-			m.progressVisible = false
-			m.statusMessage = "Extraction complete"
-		}
+	case progressMsg:
+		m.progressPercent = float64(msg)
+		// return m, tea.Batch(
+		// 	readProgressChan(m.progressChan),
+		// 	m.spinner.Tick,
+		// )
+
+	case doneExtractingMsg:
+		m.progressPercent = 1.0
+		m.statusMessage = "✅ Extraction complete"
+		m.spinnerRunning = false
+		m.progressVisible = false
+		m.progressChan = nil
+		//return m, nil
 
 	case spinner.TickMsg:
 		if m.spinnerRunning {
@@ -59,12 +65,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.spinner, cmd = m.spinner.Update(msg)
 			cmds = append(cmds, cmd)
 		}
+		// var cmd tea.Cmd
+		// m.spinner, cmd = m.spinner.Update(msg)
+		// cmds = append(cmds, cmd)
 
 	}
-	var progressCmd tea.Cmd
-	updatedProgress, progressCmd := m.progress.Update(msg)
-	m.progress = updatedProgress.(progress.Model)
-	cmds = append(cmds, progressCmd)
+	// if m.progressChan != nil {
+	// 	cmds = append(cmds, readProgressChan(m.progressChan))
+	// }
+	if m.progressVisible && m.progressChan != nil {
+		var progressCmd tea.Cmd
+		updatedProgress, progressCmd := m.progress.Update(msg)
+		m.progress = updatedProgress.(progress.Model)
+		cmds = append(cmds, progressCmd)
+
+		//if m.progressChan != nil {
+		cmds = append(cmds, readProgressChan(m.progressChan))
+		//}
+	}
+
 	return m, tea.Batch(cmds...)
 }
 
@@ -72,47 +91,33 @@ func (m model) handleSelection() (tea.Model, tea.Cmd) {
 	switch m.cursor {
 	case 0:
 		//Extract TODOs
-		m.progressVisible = true
-		m.progressPercent = 0
-		m.spinnerRunning = true
-		m.statusMessage = "Starting extraction..."
-		return m, tea.Batch(
-			m.spinner.Tick,
-			tickProgressBar(),
-			StartExtractTodos(),
-		)
+		return m.RunExtractionCmd()
 	case 1:
 		//Start web server
-		m.statusMessage = "Starting webserver..."
-		m.spinnerRunning = true
-		m.progressVisible = false
-		return m, tea.Batch(
-			m.spinner.Tick,
-			StartWebServerCmd(),
-		)
+		return m.withSpinner("Starting webserver...", StartWebServerCmd())
 	case 2:
 		//Stop web server
-		m.statusMessage = "Stopping webserver..."
-		m.spinnerRunning = true
-		m.progressVisible = false
-		return m, tea.Batch(
-			m.spinner.Tick,
-			StopWebServerCmd(),
-		)
+		return m.withSpinner("Stopping webserver...", StopWebServerCmd())
 	case 3:
 		//Exit TUI
 		return m, tea.Quit
 	case 4:
 		//Exit & Shutdown web server
 		return m, tea.Batch(StopWebServerCmd(), tea.Quit)
+
+	default:
+		return m, nil
 	}
-	return m, nil
 }
 
-func setStatus(msg string) tea.Cmd {
-	return func() tea.Msg {
-		return statusMsg(msg)
-	}
+func (m model) withSpinner(status string, cmd tea.Cmd) (tea.Model, tea.Cmd) {
+	m.statusMessage = status
+	m.spinnerRunning = true
+	m.progressVisible = false
+	return m, tea.Batch(
+		m.spinner.Tick,
+		cmd,
+	)
 }
 
 func clearStatus() tea.Cmd {
@@ -121,8 +126,12 @@ func clearStatus() tea.Cmd {
 	})
 }
 
-func tickProgressBar() tea.Cmd {
-	return tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg {
-		return tickMsg{}
-	})
+func readProgressChan(ch <-chan tea.Msg) tea.Cmd {
+	return func() tea.Msg {
+		msg, ok := <-ch
+		if !ok {
+			return nil
+		}
+		return msg
+	}
 }
