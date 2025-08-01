@@ -3,11 +3,10 @@ package web
 import (
 	"context"
 	"encoding/json"
-	"log"
+
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
 	"text/template"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/K-Road/extract_todos/config"
 	"github.com/K-Road/extract_todos/internal/db"
+	"github.com/K-Road/extract_todos/internal/logging"
 	_ "github.com/K-Road/extract_todos/web/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
 	bolt "go.etcd.io/bbolt"
@@ -28,6 +28,7 @@ type ResponseWithTime struct {
 var templates *template.Template
 var server *http.Server
 var dbfile *bolt.DB
+var logger = logging.WebServerLogger
 
 func init() {
 	templates = template.Must(template.ParseGlob("templates/*.html"))
@@ -38,16 +39,18 @@ func StartServer() {
 	//TODO handle flag for db name
 	dbfile, err = bolt.Open("todos.db", 0666, nil)
 	if err != nil {
-		log.Fatal(err)
+		logging.WebServerLogger.Fatal(err)
+		//logging.WebServerLogger.Fatalf("Failed to open database: %v", err)
 	}
 
-	// Write PID file here
-	pid := os.Getpid()
-	pidStr := strconv.Itoa(pid)
-	if err := os.WriteFile(pidFile, []byte(pidStr), 0644); err != nil {
-		log.Fatalf("Failed to write PID file: %v", err)
-	}
-	log.Printf("Webserver started with PID %s", pidStr)
+	//Dont need this. the PID comes from the parent process
+	// // Write PID file here
+	// pid := os.Getpid()
+	// pidStr := strconv.Itoa(pid)
+	// if err := os.WriteFile(pidFile, []byte(pidStr), 0644); err != nil {
+	// 	logging.WebServerLogger.Fatalf("Failed to write PID file: %v", err)
+	// }
+	// logging.WebServerLogger.Printf("Webserver started with PID %s", pidStr)
 
 	cfg := &config.Config{DB: dbfile}
 
@@ -87,9 +90,9 @@ func StartServer() {
 
 	go func() {
 		//run webserver
-		log.Println("Starting Server on :8080")
+		logging.WebServerLogger.Println("Starting Server on :8080")
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			log.Fatalf("HTTP server error: %v", err)
+			logging.WebServerLogger.Fatalf("HTTP server error: %v", err)
 		}
 	}()
 
@@ -98,20 +101,20 @@ func StartServer() {
 }
 
 func ShutdownServer() {
-	log.Println("Shutting down webserver...")
+	logging.WebServerLogger.Println("Shutting down webserver...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		log.Printf("Forced shutdown of webserver: %v", err)
+		logging.WebServerLogger.Printf("Forced shutdown of webserver: %v", err)
 	}
 
 	if dbfile != nil {
-		log.Println("Closing database connection...")
+		logging.WebServerLogger.Println("Closing database connection...")
 		dbfile.Close()
 	}
 	_ = os.Remove(pidFile)
 	//server.Shutdown(ctx)
-	log.Println("Webserver stopped successfully")
+	logging.WebServerLogger.Println("Webserver stopped successfully")
 }
 
 func projectsHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {

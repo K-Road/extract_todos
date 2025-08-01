@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"log"
+
 	"github.com/K-Road/extract_todos/web"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -9,6 +11,7 @@ import (
 )
 
 type model struct {
+	log              *log.Logger
 	cursor           int
 	choices          []string
 	statusMessage    string
@@ -25,7 +28,7 @@ type progressMsg float64
 type doneExtractingMsg struct{}
 type tickContinueMsg struct{}
 
-func InitialModel() model {
+func InitialModel(logger *log.Logger) model {
 	s := spinner.New(spinner.WithSpinner(spinner.Dot))
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	p := progress.New(
@@ -34,6 +37,7 @@ func InitialModel() model {
 	)
 
 	m := model{
+		log: logger,
 		choices: []string{
 			"Extract TODOs",
 			"Start Web Server",

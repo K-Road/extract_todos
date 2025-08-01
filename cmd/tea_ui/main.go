@@ -1,22 +1,17 @@
 package main
 
 import (
-	"log"
-	"os"
-
+	"github.com/K-Road/extract_todos/internal/logging"
 	"github.com/K-Road/extract_todos/internal/ui"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
-	logFile, err := os.OpenFile("debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.SetOutput(logFile)
-	log.SetFlags((log.Ldate | log.Ltime | log.Lshortfile))
+	logging.Init()
+	log := logging.TUI()
+	log.Println("Starting TUI...")
 
-	p := tea.NewProgram(ui.InitialModel())
+	p := tea.NewProgram(ui.InitialModel(log))
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}

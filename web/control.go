@@ -2,13 +2,14 @@ package web
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
+
+	logging "github.com/K-Road/extract_todos/internal/logging"
 )
 
 const pidFile = "webserver.pid"
@@ -21,23 +22,34 @@ func StartWebServerDetached() error {
 	}
 
 	//start compiled binary in detached mode
-	script := "./webserver > webserver.log 2>&1 &" //echo $!"
-	cmd := exec.Command("bash", "-c", script)
+	//script := "./webserver > webserver.log 2>&1 &" //echo $!"
+	//script := "./webserver &" //> webserver.log 2>&1 &" //echo $!"
+	//cmd := exec.Command("bash", "-c", script)
+	cmd := exec.Command("./webserver")
+	cmd.Stdout = logging.WebServerLogWriter
+	cmd.Stderr = logging.WebServerLogWriter
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	//output, err := cmd.Output()
 	if err := cmd.Start(); err != nil {
+		logging.WebServerLogger.Printf("Failed to start webserver detached process: %v", err)
 		return fmt.Errorf("failed to start webserver: %w", err)
 	}
 
-	// //write PID to file
-	// pidStr := strings.TrimSpace(string(output))
-	// if err = os.WriteFile(pidFile, []byte(pidStr), 0644); err != nil {
-	// 	return fmt.Errorf("failed to write PID file: %w", err)
-	// }
+	//Zombie processes can occur if the parent process exits before the child
+	go func() {
+		_ = cmd.Wait() // Wait for the command to finish
+		logging.WebServerLogger.Println("Webserver detached process exited - Say NO! to Zombies!")
+	}()
 
-	//log.Printf("Webserver started with PID %s", pidStr)
-	log.Printf("Started webserver detached process with PID %d", cmd.Process.Pid)
+	//write PID to file
+	pidStr := strconv.Itoa(cmd.Process.Pid)
+	if err := os.WriteFile(pidFile, []byte(pidStr), 0644); err != nil {
+		return fmt.Errorf("failed to write PID file: %w", err)
+	}
+
+	//logging.WebServerLoggerPrintf("Webserver started with PID %s", pidStr)
+	logging.WebServerLogger.Printf("Started webserver detached process with PID %d", cmd.Process.Pid)
 	return nil
 }
 
@@ -56,7 +68,7 @@ func StopWebServer() error {
 	if err := process.Signal(syscall.SIGTERM); err != nil {
 		return fmt.Errorf("Failed to send interrupt signal to webserver with PID %d: %v", pid, err)
 	}
-	log.Printf("Sent SIGTERM to process %d\n", pid)
+	logging.WebServerLogger.Printf("Sent SIGTERM to process %d\n", pid)
 
 	//Wait for process to exit
 	const maxWait = 5 * time.Second
@@ -69,15 +81,32 @@ func StopWebServer() error {
 			return fmt.Errorf("timeout waiting for process %d to exit", pid)
 		case <-tick:
 			if err := process.Signal(syscall.Signal(0)); err != nil {
-				log.Printf("Process %d has exited", pid)
-				_ = os.Remove(pidFile) // Clean up PID file
-				_ = os.Remove("webserver")
+				logging.WebServerLogger.Printf("Process %d has exited", pid)
+				cleanup()
+				return nil
+			}
+			if isZombie(pid) {
+				logging.WebServerLogger.Printf("Process %d is a zombie, cleaning up", pid)
+				cleanup()
 				return nil
 			}
 		}
 	}
 }
 
+func cleanup() {
+	_ = os.Remove(pidFile) // Clean up PID file
+	_ = os.Remove("webserver")
+}
+
+func isZombie(pid int) bool {
+	statusFile := fmt.Sprintf("/proc/%d/status", pid)
+	data, err := os.ReadFile(statusFile)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(data), "State:\tZ")
+}
 func IsWebServerRunning() bool {
 	pid, err := readPID()
 	if err != nil {

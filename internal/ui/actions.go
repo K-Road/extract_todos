@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"log"
 	"time"
 
 	"github.com/K-Road/extract_todos/internal/extract"
@@ -8,9 +9,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func StartWebServerCmd() tea.Cmd {
+func StartWebServerCmd(log *log.Logger) tea.Cmd {
 	return func() tea.Msg {
 		if web.IsWebServerRunning() {
+			log.Println("Web server is already running.")
 			return statusMsg("Webserver started!✅")
 		}
 		time.Sleep(2 * time.Second)

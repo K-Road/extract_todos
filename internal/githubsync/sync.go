@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/K-Road/extract_todos/internal/helper"
 	"github.com/google/go-github/v72/github"
 	"golang.org/x/oauth2"
 )
@@ -108,7 +109,9 @@ func CloseDeletedTodos(ctx context.Context, client *github.Client, owner, repo, 
 	}
 
 	for title, issue := range existingIssues {
-		if _, exists := todos[title]; !exists && issue.GetState() == "open" {
+		if _, exists := todos[title]; !exists &&
+			issue.GetState() == "open" &&
+			hasLabel(issue.Labels, "sync-generated") {
 			err := CloseIssueIfExists(ctx, client, owner, repo, issue.GetNumber())
 			if err != nil {
 				return err
@@ -120,7 +123,7 @@ func CloseDeletedTodos(ctx context.Context, client *github.Client, owner, repo, 
 
 func CloseIssueIfExists(ctx context.Context, client *github.Client, owner, repo string, issueNumber int) error {
 	issueRequest := &github.IssueRequest{
-		State: github.String("closed"),
+		State: helper.String("closed"),
 	}
 
 	_, _, err := client.Issues.Edit(ctx, owner, repo, issueNumber, issueRequest)
@@ -129,4 +132,13 @@ func CloseIssueIfExists(ctx context.Context, client *github.Client, owner, repo 
 	}
 	log.Printf("Closed issue #%d\n", issueNumber)
 	return nil
+}
+
+func hasLabel(labels []*github.Label, target string) bool {
+	for _, label := range labels {
+		if label.GetName() == target {
+			return true
+		}
+	}
+	return false
 }

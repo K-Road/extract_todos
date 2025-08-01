@@ -94,7 +94,7 @@ func (m model) handleSelection() (tea.Model, tea.Cmd) {
 		return m.RunExtractionCmd()
 	case 1:
 		//Start web server
-		return m.withSpinner("Starting webserver...", StartWebServerCmd())
+		return m.withSpinner("Starting webserver...", StartWebServerCmd(m.log))
 	case 2:
 		//Stop web server
 		return m.withSpinner("Stopping webserver...", StopWebServerCmd())
