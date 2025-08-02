@@ -32,14 +32,14 @@ func StartWebServerDetached() error {
 
 	//output, err := cmd.Output()
 	if err := cmd.Start(); err != nil {
-		logging.WebServerLogger.Printf("Failed to start webserver detached process: %v", err)
+		getLog().Printf("Failed to start webserver detached process: %v", err)
 		return fmt.Errorf("failed to start webserver: %w", err)
 	}
 
 	//Zombie processes can occur if the parent process exits before the child
 	go func() {
 		_ = cmd.Wait() // Wait for the command to finish
-		logging.WebServerLogger.Println("Webserver detached process exited - Say NO! to Zombies!")
+		getLog().Println("Webserver detached process exited - Say NO! to Zombies!")
 	}()
 
 	//write PID to file
@@ -49,7 +49,7 @@ func StartWebServerDetached() error {
 	}
 
 	//logging.WebServerLoggerPrintf("Webserver started with PID %s", pidStr)
-	logging.WebServerLogger.Printf("Started webserver detached process with PID %d", cmd.Process.Pid)
+	getLog().Printf("Started webserver detached process with PID %d", cmd.Process.Pid)
 	return nil
 }
 
@@ -68,7 +68,7 @@ func StopWebServer() error {
 	if err := process.Signal(syscall.SIGTERM); err != nil {
 		return fmt.Errorf("Failed to send interrupt signal to webserver with PID %d: %v", pid, err)
 	}
-	logging.WebServerLogger.Printf("Sent SIGTERM to process %d\n", pid)
+	getLog().Printf("Sent SIGTERM to process %d\n", pid)
 
 	//Wait for process to exit
 	const maxWait = 5 * time.Second
@@ -81,12 +81,12 @@ func StopWebServer() error {
 			return fmt.Errorf("timeout waiting for process %d to exit", pid)
 		case <-tick:
 			if err := process.Signal(syscall.Signal(0)); err != nil {
-				logging.WebServerLogger.Printf("Process %d has exited", pid)
+				getLog().Printf("Process %d has exited", pid)
 				cleanup()
 				return nil
 			}
 			if isZombie(pid) {
-				logging.WebServerLogger.Printf("Process %d is a zombie, cleaning up", pid)
+				getLog().Printf("Process %d is a zombie, cleaning up", pid)
 				cleanup()
 				return nil
 			}

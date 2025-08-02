@@ -91,19 +91,19 @@ func (m model) handleSelection() (tea.Model, tea.Cmd) {
 	switch m.cursor {
 	case 0:
 		//Extract TODOs
-		return m.RunExtractionCmd()
+		return m.RunExtractionCmd(m.log)
 	case 1:
 		//Start web server
 		return m.withSpinner("Starting webserver...", StartWebServerCmd(m.log))
 	case 2:
 		//Stop web server
-		return m.withSpinner("Stopping webserver...", StopWebServerCmd())
+		return m.withSpinner("Stopping webserver...", StopWebServerCmd(m.log))
 	case 3:
 		//Exit TUI
 		return m, tea.Quit
 	case 4:
 		//Exit & Shutdown web server
-		return m, tea.Batch(StopWebServerCmd(), tea.Quit)
+		return m, tea.Batch(StopWebServerCmd(m.log), tea.Quit)
 
 	default:
 		return m, nil

@@ -24,8 +24,9 @@ func StartWebServerCmd(log *log.Logger) tea.Cmd {
 	}
 }
 
-func StopWebServerCmd() tea.Cmd {
+func StopWebServerCmd(log *log.Logger) tea.Cmd {
 	return func() tea.Msg {
+		log.Println("Stopping web server...")
 		time.Sleep(1 * time.Second)
 		err := web.StopWebServer()
 		if err != nil {
@@ -35,13 +36,14 @@ func StopWebServerCmd() tea.Cmd {
 	}
 }
 
-func (m model) RunExtractionCmd() (tea.Model, tea.Cmd) {
+func (m model) RunExtractionCmd(log *log.Logger) (tea.Model, tea.Cmd) {
 	m.progressVisible = true
 	m.progressPercent = 0
 	m.spinnerRunning = true
 	m.statusMessage = "Starting extraction..."
 	msgCh := make(chan tea.Msg, 10)
 	m.progressChan = msgCh
+	log.Println("Running extraction command...")
 
 	go func() {
 		err := extract.RunWithProgress(func(p float64) {

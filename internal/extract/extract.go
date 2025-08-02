@@ -14,9 +14,14 @@ import (
 
 	"github.com/K-Road/extract_todos/config"
 	"github.com/K-Road/extract_todos/internal/db"
+	"github.com/K-Road/extract_todos/internal/logging"
 	"github.com/K-Road/extract_todos/web"
 	bolt "go.etcd.io/bbolt"
 )
+
+func getLog() *log.Logger {
+	return logging.Extract()
+}
 
 func hashTodo(todo config.Todo) string {
 	s := fmt.Sprintf("%s:%s", todo.File, todo.Text)
@@ -54,32 +59,32 @@ func internalRun(updateProgress func(p float64)) error {
 	//TODO Implement this is a flag
 	root := "/home/chrode/workspace/github.com/K-Road/discord-moodbot/"
 	projectName := filepath.Base(strings.TrimRight(root, string(os.PathSeparator)))
-	log.Println(root)
-	log.Println(projectName)
+	getLog().Println(root)
+	getLog().Println(projectName)
 
 	wasServerRunning := web.IsWebServerRunning()
 	if wasServerRunning {
-		log.Println("Webserver is running, stopping it to avoid conflicts...")
+		getLog().Println("Webserver is running, stopping it to avoid conflicts...")
 		if err := web.StopWebServer(); err != nil {
 			return fmt.Errorf("Failed to stop webserver: %v", err)
 		}
 	}
 	// if web.StopWebServer() != nil {
-	// 	log.Println("Webserver not running or already stopped.")
+	// 	getLog().Println("Webserver not running or already stopped.")
 	// }
-	log.Println("Waiting DB lock...")
+	getLog().Println("Waiting DB lock...")
 	for i := 0; i < 10; i++ {
 		if !isDBLocked("todos.db") {
-			log.Println("DB is not locked, proceeding...")
+			getLog().Println("DB is not locked, proceeding...")
 			break
 		}
-		log.Println("DB is locked, waiting...")
+		getLog().Println("DB is locked, waiting...")
 		time.Sleep(500 * time.Millisecond)
 	}
 	//time.Sleep(500 * time.Millisecond)
 	//wasServerRunning := stopWebServer()
 
-	log.Println("Opening DB... ")
+	getLog().Println("Opening DB... ")
 	//Open bolt db
 	bdb, err := bolt.Open("todos.db", 0600, nil)
 	if err != nil {
@@ -106,9 +111,9 @@ func internalRun(updateProgress func(p float64)) error {
 	for _, path := range goFiles {
 		current++
 		if updateProgress != nil {
-			//log.Println("1")
+			//getLog().Println("1")
 			updateProgress(float64(current) / float64(total))
-			//log.Println("2")
+			//getLog().Println("2")
 		}
 
 		f, err := os.Open(path)
@@ -134,9 +139,9 @@ func internalRun(updateProgress func(p float64)) error {
 				scannedTodos = append(scannedTodos, todo) // Collect all todos for delete sync
 				//Check if duplicate
 				if saved, err := saveTodo(bdb, todo, projectName); err != nil {
-					log.Println("Failed to save TODO:", err)
+					getLog().Println("Failed to save TODO:", err)
 				} else if saved {
-					log.Printf("New TODO saved: %s:%d %s\n", todo.File, todo.Line, todo.Text)
+					getLog().Printf("New TODO saved: %s:%d %s\n", todo.File, todo.Line, todo.Text)
 				}
 			}
 			lineNum++
@@ -144,7 +149,7 @@ func internalRun(updateProgress func(p float64)) error {
 		f.Close()
 
 	}
-	log.Println("Finished scan")
+	getLog().Println("Finished scan")
 	//DEBUG to list all entries
 	viewTodos(bdb)
 
@@ -154,9 +159,9 @@ func internalRun(updateProgress func(p float64)) error {
 
 	//Restart webserver
 	if wasServerRunning {
-		log.Println("Restarting webserver...")
+		getLog().Println("Restarting webserver...")
 		if err := web.StartWebServerDetached(); err != nil {
-			log.Printf("Failed to restart webserver: %v", err)
+			getLog().Printf("Failed to restart webserver: %v", err)
 		}
 	}
 	updateProgress(1)
@@ -185,11 +190,11 @@ func removeTodos(bdb *bolt.DB, projectName string, scannedTodos []config.Todo) e
 	for _, todo := range storedTodos {
 		id := hashTodo(todo)
 		if _, exists := scannedIDs[id]; !exists {
-			log.Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
+			getLog().Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
 
 			// //Delete from bolt db
 			if err := db.DeleteTodoById(bdb, projectName, id); err != nil {
-				log.Printf("Failed to delete from DB: %v", err)
+				getLog().Printf("Failed to delete from DB: %v", err)
 			}
 		}
 	}
@@ -199,15 +204,15 @@ func removeTodos(bdb *bolt.DB, projectName string, scannedTodos []config.Todo) e
 func viewTodos(bdb *bolt.DB) {
 	err := bdb.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
-			log.Printf("Project: %s\n", name)
+			getLog().Printf("Project: %s\n", name)
 			return b.ForEach(func(k, v []byte) error {
-				log.Printf(" - %s\n", v)
+				getLog().Printf(" - %s\n", v)
 				return nil
 			})
 		})
 	})
 	if err != nil {
-		log.Println("Erroring reading from DB:", err)
+		getLog().Println("Erroring reading from DB:", err)
 	}
 }
 
