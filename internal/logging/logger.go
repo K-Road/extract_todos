@@ -2,6 +2,7 @@ package logging
 
 import (
 	"log"
+	"os"
 
 	"github.com/natefinch/lumberjack"
 )
@@ -48,4 +49,9 @@ func WEB() *log.Logger {
 }
 func Extract() *log.Logger {
 	return ExtractLogger
+}
+
+func ExitWithError(log *log.Logger, msg string, err error) {
+	log.Println(msg+":", err)
+	os.Exit(1)
 }

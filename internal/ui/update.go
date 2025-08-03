@@ -126,12 +126,26 @@ func clearStatus() tea.Cmd {
 	})
 }
 
+// func readProgressChan(ch <-chan tea.Msg) tea.Cmd {
+// 	return func() tea.Msg {
+// 		msg, ok := <-ch
+// 		if !ok {
+// 			return nil
+// 		}
+// 		return msg
+// 	}
+// }
+
 func readProgressChan(ch <-chan tea.Msg) tea.Cmd {
-	return func() tea.Msg {
-		msg, ok := <-ch
-		if !ok {
+	return tea.Tick(time.Millisecond*60, func(t time.Time) tea.Msg {
+		select {
+		case msg, ok := <-ch:
+			if !ok {
+				return nil
+			}
+			return msg
+		default:
 			return nil
 		}
-		return msg
-	}
+	})
 }

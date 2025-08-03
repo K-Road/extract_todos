@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -16,14 +15,15 @@ const (
 	CurrentVersion = "2" // increment this each time you change DB format/keys
 )
 
-func CheckDBVersionOrExit(dbfile *bolt.DB) {
+func CheckDBVersionOrExit(dbfile *bolt.DB) error {
 	version, err := GetDBVersion(dbfile)
 	if err != nil {
-		log.Fatalf("Failed to read DB version: %v", err)
+		return fmt.Errorf("Failed to read DB version: %v", err)
 	}
 	if version != CurrentVersion {
-		log.Fatalf("DB is out of date (got %q, expected %q). Please run the migration tool.", version, CurrentVersion)
+		return fmt.Errorf("DB is out of date (got %q, expected %q). Please run the migration tool.", version, CurrentVersion)
 	}
+	return nil
 }
 
 func GetDBVersion(db *bolt.DB) (string, error) {
@@ -64,8 +64,7 @@ func ListBuckets(db *bolt.DB) ([]string, error) {
 		})
 	})
 	if err != nil {
-		fmt.Println("Erroring reading from DB:", err)
-		return nil, err
+		return nil, fmt.Errorf("Failed to list buckets: %v", err)
 	}
 	return buckets, nil
 }
@@ -95,8 +94,7 @@ func FetchProjectTodos(db *bolt.DB, name string) ([]config.Todo, error) {
 		})
 	})
 	if err != nil {
-		fmt.Println("Erroring reading from DB:", err)
-		return nil, err
+		return nil, fmt.Errorf("Erroring reading from DB: %v", err)
 	}
 
 	return todos, err

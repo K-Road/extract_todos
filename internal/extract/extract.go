@@ -88,11 +88,14 @@ func internalRun(updateProgress func(p float64)) error {
 	//Open bolt db
 	bdb, err := bolt.Open("todos.db", 0600, nil)
 	if err != nil {
-		return err
+		logging.ExitWithError(getLog(), "Failed to open database:", err)
 	}
 	defer bdb.Close()
 
-	db.CheckDBVersionOrExit(bdb)
+	getLog().Println("Checking DB version...")
+	if err = db.CheckDBVersionOrExit(bdb); err != nil {
+		logging.ExitWithError(getLog(), "DB version check failed:", err)
+	}
 
 	var goFiles []string
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
@@ -151,10 +154,12 @@ func internalRun(updateProgress func(p float64)) error {
 	}
 	getLog().Println("Finished scan")
 	//DEBUG to list all entries
+	getLog().Println("DEBUG: Listing all entries in DB")
 	viewTodos(bdb)
 
 	err = removeTodos(bdb, projectName, scannedTodos)
 
+	getLog().Println("DEBUG: Listing all entries in DB after removal")
 	viewTodos(bdb)
 
 	//Restart webserver
