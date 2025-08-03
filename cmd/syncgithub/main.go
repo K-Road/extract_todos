@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -25,6 +26,8 @@ func init() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	//TODO specify user.
+	config.LoadUsersFromEnv()
 }
 
 func main() {
@@ -32,9 +35,10 @@ func main() {
 	retag := flag.String("retag", "", "Apply updates to existing issues...")
 	flag.Parse()
 	baseURL := "http://localhost:8080"
-	project := "discord-moodbot"
+	project := "extract_todos"
+	apikey := os.Getenv("API_KEY")
 
-	todos, err := getTodos(baseURL, project)
+	todos, err := getTodos(baseURL, project, apikey)
 	if err != nil {
 		log.Fatal("Error fetching todos:", err)
 	}
@@ -106,7 +110,7 @@ func main() {
 
 }
 
-func getTodos(baseURL, project string) ([]config.Todo, error) {
+func getTodos_old(baseURL, project string) ([]config.Todo, error) {
 	resp, err := http.Get(fmt.Sprintf("%s/api/projects/%s/todos", baseURL, project))
 	if err != nil {
 		return nil, err
@@ -120,4 +124,33 @@ func getTodos(baseURL, project string) ([]config.Todo, error) {
 	}
 
 	return data.Todos, nil
+}
+
+func getTodos(baseURL, project, apikey string) ([]config.Todo, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/projects/%s/todos", baseURL, project), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("X-API-Key", apikey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("error: %s\n%s", resp.Status, body)
+	}
+
+	var data TodosResponse
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding JSON: %v", err)
+	}
+
+	return data.Todos, nil
+
 }

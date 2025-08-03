@@ -3,11 +3,11 @@ package web
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"text/template"
 	"time"
@@ -15,6 +15,7 @@ import (
 	"github.com/K-Road/extract_todos/config"
 	"github.com/K-Road/extract_todos/internal/db"
 	_ "github.com/K-Road/extract_todos/web/docs"
+	"github.com/joho/godotenv"
 	httpSwagger "github.com/swaggo/http-swagger"
 	bolt "go.etcd.io/bbolt"
 )
@@ -30,6 +31,8 @@ var dbfile *bolt.DB
 
 func init() {
 	templates = template.Must(template.ParseGlob("templates/*.html"))
+	_ = godotenv.Load(".env")
+	config.LoadUsersFromEnv()
 }
 
 func StartServer() {
@@ -52,13 +55,23 @@ func StartServer() {
 
 	cfg := &config.Config{DB: dbfile}
 
+	//TODO load users for webserver authentication
+	//config.LoadUsersFromEnv()
+	// if err != nil {
+	// 	getLog().Fatalf("Failed to load users from env: %v", err)
+	// }
+
 	mux := http.NewServeMux()
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	mux.HandleFunc("GET /projects", func(w http.ResponseWriter, r *http.Request) {
 		projectsHandler(w, r, cfg)
 	})
-	mux.HandleFunc("GET /projects/{name}/todos", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/projects/{name}/todos", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
 		todosHandler(w, r, cfg)
 	})
 
@@ -66,12 +79,8 @@ func StartServer() {
 	apiMux.HandleFunc("/api/projects", func(w http.ResponseWriter, r *http.Request) {
 		apiProjectHandler(w, r, cfg)
 	})
-	apiMux.HandleFunc("/api/projects/", func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasSuffix(r.URL.Path, "/todos") {
-			apiTodosHandler(w, r, cfg)
-			return
-		}
-		http.NotFound(w, r)
+	apiMux.HandleFunc("/api/projects/{name}/todos", func(w http.ResponseWriter, r *http.Request) {
+		apiTodosHandler(w, r, cfg)
 	})
 	mux.Handle("/api/", AuthenticateAPIKey(apiMux))
 
@@ -179,9 +188,10 @@ func todosHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 // @Router /api/projects/{name}/todos [get]
 func apiTodosHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 	name := r.PathValue("name")
+	fmt.Println("Fetching todos for project:", name)
 	todos, err := db.FetchProjectTodos(cfg.DB, name)
 	if err != nil {
-		http.Error(w, "DB Error", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("DB Error %v", err), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

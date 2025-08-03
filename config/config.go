@@ -6,6 +6,7 @@ type Config struct {
 	DB *bolt.DB
 }
 
+// TODO Move this to extract package?
 type Todo struct {
 	File string
 	Line int

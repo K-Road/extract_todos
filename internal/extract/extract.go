@@ -57,7 +57,7 @@ func internalRun(updateProgress func(p float64)) error {
 	//var todos []Todo
 	var scannedTodos []config.Todo
 	//TODO Implement this is a flag
-	root := "/home/chrode/workspace/github.com/K-Road/discord-moodbot/"
+	root := "/home/chrode/workspace/github.com/K-Road/extract_todos/"
 	projectName := filepath.Base(strings.TrimRight(root, string(os.PathSeparator)))
 	getLog().Println(root)
 	getLog().Println(projectName)
