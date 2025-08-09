@@ -11,6 +11,11 @@ import (
 type statusMsg string
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.state == "settings" || m.state == "list" || m.state == "set" || m.state == "add" {
+		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+			return m.updateProjectSettings(keyMsg)
+		}
+	}
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -93,16 +98,22 @@ func (m model) handleSelection() (tea.Model, tea.Cmd) {
 		//Extract TODOs
 		return m.RunExtractionCmd(m.log)
 	case 1:
+		m.state = "settings"
+		m.cursor = 0
+		m.choices = settingsMenuChoices()
+		return m, nil
+	case 2:
 		//Start web server
 		return m.withSpinner("Starting webserver...", StartWebServerCmd(m.log))
-	case 2:
+	case 3:
 		//Stop web server
 		return m.withSpinner("Stopping webserver...", StopWebServerCmd(m.log))
-	case 3:
+	case 4:
 		//Exit TUI
 		return m, tea.Quit
-	case 4:
+	case 5:
 		//Exit & Shutdown web server
+		//TODO this isn't shutting down the webserver
 		return m, tea.Batch(StopWebServerCmd(m.log), tea.Quit)
 
 	default:

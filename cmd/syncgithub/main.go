@@ -58,6 +58,8 @@ func main() {
 		log.Fatal("Failed to create GitHub client")
 	}
 
+	//TODO failsafe check for token validation
+
 	//Fetch existing issues to avoid duplicates
 	existingIssues, err := githubsync.FetchAllOpenIssues(ctx, client, owner, repo)
 	if err != nil {

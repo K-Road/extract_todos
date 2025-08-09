@@ -63,53 +63,22 @@ func (m model) RunExtractionCmd(log *log.Logger) (tea.Model, tea.Cmd) {
 	)
 }
 
-// func runExtractionCmd() tea.Cmd {
-// 	return func() tea.Msg {
-// 		ch := make(chan tea.Msg)
-// 		go func() {
-// 			_ = extract.RunWithProgress(func(p float64) {
-// 				ch <- progressMsg(p)
-// 			})
-// 			ch <- doneExtractingMsg{}
-// 			close(ch)
-// 		}()
+func mainMenuChoices() []string {
+	return []string{
+		"Extract TODOs",
+		"Project Settings",
+		"Start Web Server",
+		"Stop Web Server",
+		"Exit TUI",
+		"Exit & Shutdown Web Server",
+	}
+}
 
-// 		return func() tea.Msg {
-// 			msg, ok := <-ch
-// 			if !ok {
-// 				return nil
-// 			}
-// 			return msg
-// 		}
-// 	}
-// }
-
-// func runExtractionCmd() tea.Cmd {
-// 	return func() tea.Msg {
-// 		msgCh := make(chan tea.Msg, 100) // buffered to avoid deadlock
-
-// 		go func() {
-// 			err := extract.RunWithProgress(func(p float64) {
-// 				select {
-// 				case msgCh <- progressMsg(p):
-// 				default: // avoid blocking if UI is not ready
-// 				}
-// 			})
-
-// 			if err != nil {
-// 				msgCh <- statusMsg("❌ Extraction failed")
-// 			} else {
-// 				msgCh <- doneExtractingMsg{}
-// 			}
-// 			close(msgCh)
-// 		}()
-
-// 		return func() tea.Msg {
-// 			msg, ok := <-msgCh
-// 			if !ok {
-// 				return nil
-// 			}
-// 			return msg
-// 		}
-// 	}
-// }
+func settingsMenuChoices() []string {
+	return []string{
+		"List Projects",
+		"Add Project",
+		"Set Active Project",
+		"Back",
+	}
+}
