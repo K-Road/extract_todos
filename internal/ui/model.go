@@ -25,6 +25,7 @@ type model struct {
 	progressChan     chan tea.Msg
 	state            string // "list", "settings", "set", "add"
 	dataProvider     data.DataProvider
+	activeProject    string // currently active project
 }
 type tickMsg struct{}
 type progressMsg float64
@@ -38,6 +39,11 @@ func InitialModel(logger *log.Logger, dp data.DataProvider) model {
 		progress.WithDefaultGradient(),
 		progress.WithScaledGradient("10", "200"),
 	)
+
+	activeProject, err := dp.GetActiveProject()
+	if err != nil {
+		logger.Printf("Error getting active project: %v", err)
+	}
 
 	m := model{
 		log: logger,
@@ -54,6 +60,7 @@ func InitialModel(logger *log.Logger, dp data.DataProvider) model {
 		progress:         p,
 		state:            "main",
 		dataProvider:     dp,
+		activeProject:    activeProject,
 	}
 	return m
 }

@@ -37,3 +37,11 @@ func (bp *BoltProvider) Close() error {
 	}
 	return nil
 }
+
+func (bp *BoltProvider) SetActiveProject(name string) error {
+	return db.SetActiveProject(bp.DB, name)
+}
+
+func (bp *BoltProvider) GetActiveProject() (string, error) {
+	return db.GetActiveproject(bp.DB)
+}

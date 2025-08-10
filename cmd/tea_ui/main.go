@@ -14,11 +14,13 @@ func main() {
 
 	// Initialize the database connection
 	dbfile := "todos.db"
-	dp := &data.BoltProvider{}
-	if err := dp.OpenDB(dbfile); err != nil {
+	bp := &data.BoltProvider{}
+	if err := bp.OpenDB(dbfile); err != nil {
 		log.Fatalf("Failed to open database: %v", err)
 	}
-	defer dp.Close()
+	defer bp.Close()
+
+	var dp data.DataProvider = bp
 
 	p := tea.NewProgram(ui.InitialModel(log, dp))
 	if _, err := p.Run(); err != nil {

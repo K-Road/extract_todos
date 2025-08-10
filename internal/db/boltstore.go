@@ -14,6 +14,7 @@ const (
 	VersionKey     = "version"
 	CurrentVersion = "2" // increment this each time you change DB format/keys
 )
+const ActiveProjectKey = "active_project"
 
 func CheckDBVersionOrExit(dbfile *bolt.DB) error {
 	version, err := GetDBVersion(dbfile)
@@ -59,7 +60,11 @@ func ListBuckets(db *bolt.DB) ([]string, error) {
 	var buckets []string
 	err := db.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error {
-			buckets = append(buckets, string(name))
+			bucketName := string(name)
+			if bucketName == MetaBucket {
+				return nil // Skip meta bucket
+			}
+			buckets = append(buckets, bucketName)
 			return nil
 		})
 	})
@@ -111,4 +116,33 @@ func DeleteTodoById(bdb *bolt.DB, projectName, id string) error {
 		}
 		return nil
 	})
+}
+
+func SetActiveProject(db *bolt.DB, projectName string) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(MetaBucket))
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte(ActiveProjectKey), []byte(projectName))
+	})
+}
+
+func GetActiveproject(db *bolt.DB) (string, error) {
+	var projectName string
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(MetaBucket))
+		if b == nil {
+			projectName = ""
+			return nil
+		}
+		val := b.Get([]byte(ActiveProjectKey))
+		if val == nil {
+			projectName = ""
+			return nil
+		}
+		projectName = string(val)
+		return nil
+	})
+	return projectName, err
 }
