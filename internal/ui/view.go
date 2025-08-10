@@ -14,19 +14,26 @@ func (m model) View() string {
 	//header
 	s.WriteString("\n")
 	if m.activeProject != "" {
-		s.WriteString(fmt.Sprintf("Active Project: %s\n", m.activeProject))
+		activeProject := ActiveItemStyle.Render(m.activeProject)
+		s.WriteString(fmt.Sprintf("Active Project: %s\n", activeProject))
 	} else {
 		s.WriteString("No active project set.\n")
 	}
 
 	s.WriteString("\nSelect an option:\n\n")
 
+	if m.state == "list" {
+		s.WriteString("Enter: Set Active | d: Delete | esc: Back\n\n")
+	}
+
 	for i, choice := range m.choices {
 		cursor := " "
 		label := choice
 		suffix := ""
 
-		if choice == "Start Web Server" && m.webServerRunning {
+		if m.state == "list" && choice == m.activeProject {
+			suffix = ActiveItemStyle.Render(" (active)")
+		} else if choice == "Start Web Server" && m.webServerRunning {
 			suffix = RunningItemStyle.Render(" (running)")
 		}
 
@@ -44,6 +51,8 @@ func (m model) View() string {
 	switch m.state {
 	case "main":
 		s.WriteString("\nPress 'q' to quit.\n")
+	case "list":
+		s.WriteString("\nEnter: Set Active | d: Delete | esc: Back\n")
 	default:
 		s.WriteString("\nPress 'esc' to return to the main menu.\n")
 	}
@@ -51,11 +60,8 @@ func (m model) View() string {
 	//status area
 	if m.statusMessage != "" {
 		if m.spinnerRunning {
-			//s += fmt.Sprintf("%s %s\n", m.spinner.View(), m.statusMessage)
 			s.WriteString(fmt.Sprintf("%s %s\n", m.spinner.View(), m.statusMessage))
-		} else //if m.statusMessage != "" {
-		//s += fmt.Sprintf("💬 %s\n", m.statusMessage)
-		{
+		} else {
 			s.WriteString(fmt.Sprintf("💬 %s\n", m.statusMessage))
 		}
 	} else {
@@ -63,13 +69,9 @@ func (m model) View() string {
 	}
 
 	if m.progressVisible {
-		//s += fmt.Sprintf("\n%s", m.progress.ViewAs(m.progressPercent))
 		s.WriteString(fmt.Sprintf("%s\n", m.progress.ViewAs(m.progressPercent)))
 	} else {
 		s.WriteString("\n")
-	} //else if m.statusMessage != "" && m.progressVisible {
-	//	s += fmt.Sprintf("\n💬 %s", m.statusMessage)
-	//}
+	}
 	return s.String()
-
 }

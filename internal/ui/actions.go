@@ -74,11 +74,10 @@ func mainMenuChoices() []string {
 	}
 }
 
-func settingsMenuChoices() []string {
+func projectSettingsMenuChoices() []string {
 	return []string{
 		"List Projects",
 		"Add Project",
-		"Set Active Project",
 		"Back",
 	}
 }

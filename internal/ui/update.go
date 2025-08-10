@@ -11,11 +11,18 @@ import (
 type statusMsg string
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if m.state == "settings" || m.state == "list" || m.state == "set" || m.state == "add" {
-		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+	//if m.state == "settings" || m.state == "list" || m.state == "set" || m.state == "add" {
+	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		switch m.state {
+		case "settings":
 			return m.updateProjectSettings(keyMsg)
+		case "list":
+			return m.updateListProjects(keyMsg)
+		case "add":
+			//TODO add add route
 		}
 	}
+
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -51,10 +58,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case progressMsg:
 		m.progressPercent = float64(msg)
-		// return m, tea.Batch(
-		// 	readProgressChan(m.progressChan),
-		// 	m.spinner.Tick,
-		// )
 
 	case doneExtractingMsg:
 		m.progressPercent = 1.0
@@ -62,7 +65,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.spinnerRunning = false
 		m.progressVisible = false
 		m.progressChan = nil
-		//return m, nil
 
 	case spinner.TickMsg:
 		if m.spinnerRunning {
@@ -70,14 +72,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.spinner, cmd = m.spinner.Update(msg)
 			cmds = append(cmds, cmd)
 		}
-		// var cmd tea.Cmd
-		// m.spinner, cmd = m.spinner.Update(msg)
-		// cmds = append(cmds, cmd)
-
 	}
-	// if m.progressChan != nil {
-	// 	cmds = append(cmds, readProgressChan(m.progressChan))
-	// }
+
 	if m.progressVisible && m.progressChan != nil {
 		var progressCmd tea.Cmd
 		updatedProgress, progressCmd := m.progress.Update(msg)
@@ -100,7 +96,7 @@ func (m model) handleSelection() (tea.Model, tea.Cmd) {
 	case 1:
 		m.state = "settings"
 		m.cursor = 0
-		m.choices = settingsMenuChoices()
+		m.choices = projectSettingsMenuChoices()
 		return m, nil
 	case 2:
 		//Start web server
@@ -136,16 +132,6 @@ func clearStatus() tea.Cmd {
 		return statusMsg("")
 	})
 }
-
-// func readProgressChan(ch <-chan tea.Msg) tea.Cmd {
-// 	return func() tea.Msg {
-// 		msg, ok := <-ch
-// 		if !ok {
-// 			return nil
-// 		}
-// 		return msg
-// 	}
-// }
 
 func readProgressChan(ch <-chan tea.Msg) tea.Cmd {
 	return tea.Tick(time.Millisecond*60, func(t time.Time) tea.Msg {
