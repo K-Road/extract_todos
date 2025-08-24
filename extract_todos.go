@@ -175,7 +175,7 @@ func main() {
 	//DEBUG to list all entries
 	viewTodos(bdb)
 
-	err = removeTodos(bdb, projectName, scannedTodos)
+	//err = removeTodos(bdb, projectName, scannedTodos)
 
 	viewTodos(bdb)
 
@@ -195,30 +195,30 @@ func main() {
 	}
 }
 
-func removeTodos(bdb *bolt.DB, projectName string, scannedTodos []config.Todo) error {
-	storedTodos, err := db.FetchProjectTodos(bdb, projectName)
-	if err != nil {
-		return fmt.Errorf("failed to fetch todos for project %s: %w", projectName, err)
-	}
-	scannedIDs := make(map[string]struct{})
-	for _, todo := range scannedTodos {
-		id := hashTodo(todo)
-		scannedIDs[id] = struct{}{}
-	}
+// func removeTodos(bdb *bolt.DB, projectName string, scannedTodos []config.Todo) error {
+// 	storedTodos, err := db.FetchProjectTodos(bdb, projectName)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to fetch todos for project %s: %w", projectName, err)
+// 	}
+// 	scannedIDs := make(map[string]struct{})
+// 	for _, todo := range scannedTodos {
+// 		id := hashTodo(todo)
+// 		scannedIDs[id] = struct{}{}
+// 	}
 
-	for _, todo := range storedTodos {
-		id := hashTodo(todo)
-		if _, exists := scannedIDs[id]; !exists {
-			log.Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
+// 	for _, todo := range storedTodos {
+// 		id := hashTodo(todo)
+// 		if _, exists := scannedIDs[id]; !exists {
+// 			log.Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
 
-			// //Delete from bolt db
-			if err := db.DeleteTodoById(bdb, projectName, id); err != nil {
-				log.Printf("Failed to delete from DB: %v", err)
-			}
-		}
-	}
-	return nil
-}
+// 			// //Delete from bolt db
+// 			if err := db.DeleteTodoById(bdb, projectName, id); err != nil {
+// 				log.Printf("Failed to delete from DB: %v", err)
+// 			}
+// 		}
+// 	}
+// 	return nil
+// }
 
 func viewTodos(bdb *bolt.DB) {
 	err := bdb.View(func(tx *bolt.Tx) error {

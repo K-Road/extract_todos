@@ -13,6 +13,10 @@ webserver.pid
 nohup.out
 /webserver
 /logs
+*.log
+
+*.db
+*.sqlite
 
 # Test binary, built with `go test -c`
 *.test

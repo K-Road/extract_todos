@@ -4,23 +4,42 @@ import (
 	"log"
 	"time"
 
+	"github.com/K-Road/extract_todos/config"
 	"github.com/K-Road/extract_todos/internal/extract"
 	"github.com/K-Road/extract_todos/web"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func StartWebServerCmd(log *log.Logger) tea.Cmd {
+func StartWebServerCmd(log *log.Logger, sendMsg func(tea.Msg)) tea.Cmd {
 	return func() tea.Msg {
 		if web.IsWebServerRunning() {
 			log.Println("Web server is already running.")
-			return statusMsg("Webserver started!✅")
+			return statusMsg("Webserver already running!✅")
 		}
-		time.Sleep(2 * time.Second)
-		err := web.StartWebServerDetached()
-		if err != nil {
-			return statusMsg("Failed to start webserver")
-		}
-		return statusMsg("Webserver started!✅")
+		//time.Sleep(2 * time.Second)
+
+		go func() {
+
+			err := web.StartWebServerDetached()
+			if err != nil {
+				log.Println("Failed to start webserver:", err)
+				// ch := make(chan tea.Msg)
+				// ch <- statusMsg("❌ Failed to start webserver")
+				sendMsg(statusMsg("Failed to start webserver"))
+				return
+			}
+			// ch := make(chan tea.Msg)
+			// ch <- statusMsg("Starting webserver...")
+			//return statusMsg("Webserver started!✅")
+			// if err := web.WaitForWebServer(8080, 5*time.Second); err != nil {
+			// 	log.Println("Web server did not start in time:", err)
+			// 	sendMsg(statusMsg("❌ Webserver did not start in time"))
+			// 	return
+			// }
+
+			sendMsg(statusMsg("Webserver started!✅"))
+		}()
+		return statusMsg("Webserver starting...")
 	}
 }
 
@@ -37,6 +56,10 @@ func StopWebServerCmd(log *log.Logger) tea.Cmd {
 }
 
 func (m model) RunExtractionCmd(log *log.Logger) (tea.Model, tea.Cmd) {
+	if m.activeProject == "" {
+		m.statusMessage = "⚠️ No active project selected"
+		return m, nil
+	}
 	m.progressVisible = true
 	m.progressPercent = 0
 	m.spinnerRunning = true
@@ -45,8 +68,8 @@ func (m model) RunExtractionCmd(log *log.Logger) (tea.Model, tea.Cmd) {
 	m.progressChan = msgCh
 	log.Println("Running extraction command...")
 
-	go func() {
-		err := extract.RunWithProgress(func(p float64) {
+	go func(project string, dp config.DataProvider) {
+		err := extract.RunWithProgress(project, dp, func(p float64) {
 			msgCh <- progressMsg(p)
 		})
 		if err != nil {
@@ -55,7 +78,7 @@ func (m model) RunExtractionCmd(log *log.Logger) (tea.Model, tea.Cmd) {
 			msgCh <- doneExtractingMsg{}
 		}
 		close(msgCh)
-	}()
+	}(m.activeProject, m.dataProvider)
 
 	return m, tea.Batch(
 		m.spinner.Tick,
@@ -79,5 +102,12 @@ func projectSettingsMenuChoices() []string {
 		"List Projects",
 		"Add Project",
 		"Back",
+	}
+}
+
+func CheckWebServerStatusCmd() tea.Cmd {
+	return func() tea.Msg {
+		running := web.IsWebServerRunning()
+		return WebServerStatusMsg(running)
 	}
 }

@@ -2,14 +2,13 @@ package web
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
-
-	logging "github.com/K-Road/extract_todos/internal/logging"
 )
 
 const pidFile = "webserver.pid"
@@ -17,17 +16,25 @@ const pidFile = "webserver.pid"
 func StartWebServerDetached() error {
 	//Compile the binary if it doesn't exist
 	buildCmd := exec.Command("go", "build", "-o", "webserver", "./cmd/webserver")
+	buildCmd.Stdout = os.Stdout
+	buildCmd.Stderr = os.Stderr
+	getLog().Printf("Building webserver...")
 	if err := buildCmd.Run(); err != nil {
 		return fmt.Errorf("failed to build webserver binary: %w", err)
 	}
-
+	getLog().Printf("Build succeeded, starting detached process...")
+	// Open a log file for the detached process
+	logFile, err := os.OpenFile("webserver.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open webserver.log: %w", err)
+	}
 	//start compiled binary in detached mode
 	//script := "./webserver > webserver.log 2>&1 &" //echo $!"
 	//script := "./webserver &" //> webserver.log 2>&1 &" //echo $!"
 	//cmd := exec.Command("bash", "-c", script)
 	cmd := exec.Command("./webserver")
-	cmd.Stdout = logging.WebServerLogWriter
-	cmd.Stderr = logging.WebServerLogWriter
+	cmd.Stdout = logFile //logging.WebServerLogWriter
+	cmd.Stderr = logFile //logging.WebServerLogWriter
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	//output, err := cmd.Output()
@@ -35,12 +42,7 @@ func StartWebServerDetached() error {
 		getLog().Printf("Failed to start webserver detached process: %v", err)
 		return fmt.Errorf("failed to start webserver: %w", err)
 	}
-
-	//Zombie processes can occur if the parent process exits before the child
-	go func() {
-		_ = cmd.Wait() // Wait for the command to finish
-		getLog().Println("Webserver detached process exited - Say NO! to Zombies!")
-	}()
+	getLog().Printf("Detached webserver PID: %d", cmd.Process.Pid)
 
 	//write PID to file
 	pidStr := strconv.Itoa(cmd.Process.Pid)
@@ -48,9 +50,56 @@ func StartWebServerDetached() error {
 		return fmt.Errorf("failed to write PID file: %w", err)
 	}
 
-	//logging.WebServerLoggerPrintf("Webserver started with PID %s", pidStr)
-	getLog().Printf("Started webserver detached process with PID %d", cmd.Process.Pid)
+	// if err := WaitForWebServer(8080, 5*time.Second); err != nil {
+	// 	getLog().Printf("Webserver did not start in time: %v", err)
+	// 	_ = cmd.Process.Kill() // Kill the process if it didn't start correctly
+	// 	return fmt.Errorf("webserver did not start in time: %w", err)
+	// }
+
+	// //Zombie processes can occur if the parent process exits before the child
+	// go func() {
+	// 	_ = cmd.Wait() // Wait for the command to finish
+	// 	getLog().Println("Webserver detached process exited - Say NO! to Zombies!")
+	// }()
+
+	// Wait in a goroutine to prevent zombies
+	go func() {
+		err := cmd.Wait()
+		if err != nil {
+			fmt.Fprintf(logFile, "Webserver process exited with error: %v\n", err)
+		} else {
+			fmt.Fprintln(logFile, "Webserver process exited cleanly")
+		}
+		logFile.Close()
+	}()
+
 	return nil
+
+}
+
+func WaitForWebServer(port int, timeout time.Duration) error {
+	//logging.WebServerLoggerPrintf("Webserver started with PID %s", pidStr)
+	//getLog().Printf("Started webserver detached process with PID %d", cmd.Process.Pid)
+	//return nil
+	// Wait until port 8080 is accepting connections
+	ticker := time.NewTicker(200 * time.Millisecond)
+	defer ticker.Stop()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	for {
+		select {
+		case <-ticker.C:
+
+			conn, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+			if err == nil {
+				_ = conn.Close()
+				getLog().Printf("Webserver started successfully on :8080")
+				return nil
+			}
+		case <-timer.C:
+			return fmt.Errorf("timeout waiting for webserver to listen on :8080")
+		}
+	}
 }
 
 func StopWebServer() error {
@@ -118,7 +167,23 @@ func IsWebServerRunning() bool {
 		return false
 	}
 
-	return process.Signal(syscall.Signal(0)) == nil
+	if process.Signal(syscall.Signal(0)) != nil {
+		getLog().Printf("Webserver process with PID %d is not running", pid)
+		return false
+	}
+
+	if isZombie(pid) {
+		getLog().Printf("Webserver process with PID %d is a zombie", pid)
+		return false
+	}
+
+	// conn, err := net.DialTimeout("tcp", "127.0.0.1:8080", 1*time.Second)
+	// if err != nil {
+	// 	getLog().Printf("Webserver is not running (PID %d): %v", pid, err)
+	// 	return false
+	// }
+	// _ = conn.Close()
+	return true
 }
 
 // helper to read PID

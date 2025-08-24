@@ -13,10 +13,8 @@ import (
 	"time"
 
 	"github.com/K-Road/extract_todos/config"
-	"github.com/K-Road/extract_todos/internal/db"
 	"github.com/K-Road/extract_todos/internal/logging"
 	"github.com/K-Road/extract_todos/web"
-	bolt "go.etcd.io/bbolt"
 )
 
 func getLog() *log.Logger {
@@ -29,30 +27,7 @@ func hashTodo(todo config.Todo) string {
 	return hex.EncodeToString(h[:])
 }
 
-func saveTodo(bdb *bolt.DB, todo config.Todo, projectName string) (bool, error) {
-	id := hashTodo(todo)
-	var saved bool
-
-	err := bdb.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(projectName))
-		if err != nil {
-			return err
-		}
-		if b.Get([]byte(id)) != nil {
-			saved = false // already exists
-			return nil
-		}
-		val := fmt.Sprintf("%s:%d:%s", todo.File, todo.Line, todo.Text)
-		err = b.Put([]byte(id), []byte(val))
-		if err == nil {
-			saved = true
-		}
-		return err
-	})
-	return saved, err
-}
-
-func internalRun(updateProgress func(p float64)) error {
+func internalRun(project string, dp config.DataProvider, updateProgress func(p float64)) error {
 	time.Sleep(2 * time.Second)
 	//var todos []Todo
 	var scannedTodos []config.Todo
@@ -74,7 +49,7 @@ func internalRun(updateProgress func(p float64)) error {
 	// }
 	getLog().Println("Waiting DB lock...")
 	for i := 0; i < 10; i++ {
-		if !isDBLocked("todos.db") {
+		if !isDBLocked("todos.sqlite") {
 			getLog().Println("DB is not locked, proceeding...")
 			break
 		}
@@ -84,21 +59,21 @@ func internalRun(updateProgress func(p float64)) error {
 	//time.Sleep(500 * time.Millisecond)
 	//wasServerRunning := stopWebServer()
 
-	getLog().Println("Opening DB... ")
-	//Open bolt db
-	bdb, err := bolt.Open("todos.db", 0600, nil)
-	if err != nil {
-		logging.ExitWithError(getLog(), "Failed to open database:", err)
-	}
-	defer bdb.Close()
+	// getLog().Println("Opening DB... ")
+	// //Open bolt db
+	// bdb, err := bolt.Open("todos.db", 0600, nil)
+	// if err != nil {
+	// 	logging.ExitWithError(getLog(), "Failed to open database:", err)
+	// }
+	// defer bdb.Close()
 
-	getLog().Println("Checking DB version...")
-	if err = db.CheckDBVersionOrExit(bdb); err != nil {
-		logging.ExitWithError(getLog(), "DB version check failed:", err)
-	}
+	// getLog().Println("Checking DB version...")
+	// if err = db.CheckDBVersionOrExit(bdb); err != nil {
+	// 	logging.ExitWithError(getLog(), "DB version check failed:", err)
+	// }
 
 	var goFiles []string
-	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err == nil || !info.IsDir() || strings.HasSuffix(path, ".go") {
 			goFiles = append(goFiles, path)
 		}
@@ -141,7 +116,7 @@ func internalRun(updateProgress func(p float64)) error {
 				}
 				scannedTodos = append(scannedTodos, todo) // Collect all todos for delete sync
 				//Check if duplicate
-				if saved, err := saveTodo(bdb, todo, projectName); err != nil {
+				if saved, err := dp.SaveTodo(projectName, todo); err != nil {
 					getLog().Println("Failed to save TODO:", err)
 				} else if saved {
 					getLog().Printf("New TODO saved: %s:%d %s\n", todo.File, todo.Line, todo.Text)
@@ -155,12 +130,12 @@ func internalRun(updateProgress func(p float64)) error {
 	getLog().Println("Finished scan")
 	//DEBUG to list all entries
 	getLog().Println("DEBUG: Listing all entries in DB")
-	viewTodos(bdb)
+	//viewTodos(bdb)
 
-	err = removeTodos(bdb, projectName, scannedTodos)
+	err = dp.RemoveTodos(projectName, scannedTodos)
 
 	getLog().Println("DEBUG: Listing all entries in DB after removal")
-	viewTodos(bdb)
+	//viewTodos(bdb)
 
 	//Restart webserver
 	if wasServerRunning {
@@ -173,53 +148,53 @@ func internalRun(updateProgress func(p float64)) error {
 	return nil
 }
 
-func Run() error {
-	return internalRun(nil)
+func Run(project string, dp config.DataProvider) error {
+	return internalRun(project, dp, nil)
 }
 
-func RunWithProgress(updateProgress func(p float64)) error {
-	return internalRun(updateProgress)
+func RunWithProgress(project string, dp config.DataProvider, updateProgress func(p float64)) error {
+	return internalRun(project, dp, updateProgress)
 }
 
-func removeTodos(bdb *bolt.DB, projectName string, scannedTodos []config.Todo) error {
-	storedTodos, err := db.FetchProjectTodos(bdb, projectName)
-	if err != nil {
-		return fmt.Errorf("failed to fetch todos for project %s: %w", projectName, err)
-	}
-	scannedIDs := make(map[string]struct{})
-	for _, todo := range scannedTodos {
-		id := hashTodo(todo)
-		scannedIDs[id] = struct{}{}
-	}
+// func removeTodos(db *sql.DB, projectName string, scannedTodos []config.Todo) error {
+// 	storedTodos, err := db.FetchProjectTodos(db, projectName)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to fetch todos for project %s: %w", projectName, err)
+// 	}
+// 	scannedIDs := make(map[string]struct{})
+// 	for _, todo := range scannedTodos {
+// 		id := hashTodo(todo)
+// 		scannedIDs[id] = struct{}{}
+// 	}
 
-	for _, todo := range storedTodos {
-		id := hashTodo(todo)
-		if _, exists := scannedIDs[id]; !exists {
-			getLog().Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
+// 	for _, todo := range storedTodos {
+// 		id := hashTodo(todo)
+// 		if _, exists := scannedIDs[id]; !exists {
+// 			getLog().Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
 
-			// //Delete from bolt db
-			if err := db.DeleteTodoById(bdb, projectName, id); err != nil {
-				getLog().Printf("Failed to delete from DB: %v", err)
-			}
-		}
-	}
-	return nil
-}
+// 			// //Delete from bolt db
+// 			if err := db.DeleteTodoById(db, projectName, id); err != nil {
+// 				getLog().Printf("Failed to delete from DB: %v", err)
+// 			}
+// 		}
+// 	}
+// 	return nil
+// }
 
-func viewTodos(bdb *bolt.DB) {
-	err := bdb.View(func(tx *bolt.Tx) error {
-		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
-			getLog().Printf("Project: %s\n", name)
-			return b.ForEach(func(k, v []byte) error {
-				getLog().Printf(" - %s\n", v)
-				return nil
-			})
-		})
-	})
-	if err != nil {
-		getLog().Println("Erroring reading from DB:", err)
-	}
-}
+// func viewTodos(dp data.DataProvider) {
+// 	err := dp.View(func(tx *bolt.Tx) error {
+// 		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
+// 			getLog().Printf("Project: %s\n", name)
+// 			return b.ForEach(func(k, v []byte) error {
+// 				getLog().Printf(" - %s\n", v)
+// 				return nil
+// 			})
+// 		})
+// 	})
+// 	if err != nil {
+// 		getLog().Println("Erroring reading from DB:", err)
+// 	}
+// }
 
 func isDBLocked(path string) bool {
 	cmd := exec.Command("lsof", path)

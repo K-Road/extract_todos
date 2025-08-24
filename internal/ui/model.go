@@ -3,8 +3,7 @@ package ui
 import (
 	"log"
 
-	"github.com/K-Road/extract_todos/internal/data"
-	"github.com/K-Road/extract_todos/web"
+	"github.com/K-Road/extract_todos/config"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -24,26 +23,35 @@ type model struct {
 	progressPercent  float64
 	progressChan     chan tea.Msg
 	state            string // "list", "settings", "set", "add"
-	dataProvider     data.DataProvider
+	dataProvider     config.DataProvider
 	activeProject    string // currently active project
 }
 type tickMsg struct{}
 type progressMsg float64
 type doneExtractingMsg struct{}
 type tickContinueMsg struct{}
+type WebServerStatusMsg bool
 
-func InitialModel(logger *log.Logger, dp data.DataProvider) model {
+func InitialModel(logger *log.Logger, dp config.DataProvider) model {
 	s := spinner.New(spinner.WithSpinner(spinner.Dot))
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	p := progress.New(
 		progress.WithDefaultGradient(),
 		progress.WithScaledGradient("10", "200"),
 	)
+	activeProject := ""
+	// activeProject, err := dp.GetActiveProject()
+	// if err != nil {
+	// 	logger.Printf("Error getting active project: %v", err)
+	// }
 
-	activeProject, err := dp.GetActiveProject()
-	if err != nil {
-		logger.Printf("Error getting active project: %v", err)
-	}
+	// webServerRunning := false
+	// if web.IsWebServerRunning() {
+	// 	webServerRunning = true
+	// 	logger.Println("Web server is currently running.")
+	// } else {
+	// 	logger.Println("Web server is not running.")
+	// }
 
 	m := model{
 		log: logger,
@@ -56,7 +64,7 @@ func InitialModel(logger *log.Logger, dp data.DataProvider) model {
 			"Exit & Shutdown Web Server",
 		},
 		spinner:          s,
-		webServerRunning: web.IsWebServerRunning(),
+		webServerRunning: false,
 		progress:         p,
 		state:            "main",
 		dataProvider:     dp,
@@ -68,6 +76,7 @@ func InitialModel(logger *log.Logger, dp data.DataProvider) model {
 func (m model) Init() tea.Cmd {
 	return tea.Batch(
 		m.spinner.Tick,
+		CheckWebServerStatusCmd(),
 	)
 }
 

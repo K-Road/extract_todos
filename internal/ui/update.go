@@ -55,6 +55,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.statusMessage != "" {
 			cmds = append(cmds, clearStatus())
 		}
+	case WebServerStatusMsg:
+		m.webServerRunning = bool(msg)
 
 	case progressMsg:
 		m.progressPercent = float64(msg)
@@ -92,6 +94,11 @@ func (m model) handleSelection() (tea.Model, tea.Cmd) {
 	switch m.cursor {
 	case 0:
 		//Extract TODOs
+		if m.activeProject == "" {
+			return m, func() tea.Msg {
+				return statusMsg("❌ No active project set. Please set an active project in Project Settings.")
+			}
+		}
 		return m.RunExtractionCmd(m.log)
 	case 1:
 		m.state = "settings"
@@ -100,7 +107,9 @@ func (m model) handleSelection() (tea.Model, tea.Cmd) {
 		return m, nil
 	case 2:
 		//Start web server
-		return m.withSpinner("Starting webserver...", StartWebServerCmd(m.log))
+		return m.withSpinner("Starting webserver...", StartWebServerCmd(m.log, func(msg tea.Msg) {
+			m.Update(msg)
+		}))
 	case 3:
 		//Stop web server
 		return m.withSpinner("Stopping webserver...", StopWebServerCmd(m.log))

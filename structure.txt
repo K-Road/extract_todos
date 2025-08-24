@@ -1,0 +1,181 @@
+.
+README.md
+cmd
+cleanoldkeys
+clean_old_keys.go
+    ↪ func hashFileAndText
+    ↪ func main
+extract_todos
+main.go
+    ↪ func main
+migratedb
+main.go.na
+sqlite_migrate.go
+    ↪ func main
+set_version
+main.go
+    ↪ func main
+syncgithub
+main.go
+    ↪ func init
+    ↪ func main
+    ↪ func getTodos_old
+    ↪ func getTodos
+tea_ui
+main.go
+    ↪ func main
+test
+inspect_bolt.go
+    ↪ func main
+webctl
+main.go
+    ↪ func main
+webserver
+main.go
+    ↪ func main
+config
+auth.go
+    ↪ func LoadUsersFromEnv
+    ↪ func GetUsers
+config.go
+debug.log
+extract_todos.go
+    ↪ func hashTodo
+    ↪ func saveTodo
+    ↪ func main
+    ↪ func removeTodos
+    ↪ func viewTodos
+    ↪ func isDBLocked
+go.mod
+go.sum
+internal
+data
+bolt_factory.go
+    ↪ func BoltFactory
+boltprovider.go
+    ↪ func (*BoltProvider) ListProjects
+    ↪ func (*BoltProvider) ListProjectTodos
+    ↪ func (*BoltProvider) DeleteTodoById
+    ↪ func (*BoltProvider) SaveTodo
+    ↪ func (*BoltProvider) RemoveTodos
+    ↪ func (*BoltProvider) OpenDBWithOptions
+    ↪ func (*BoltProvider) OpenDB
+    ↪ func (*BoltProvider) Close
+    ↪ func (*BoltProvider) SetActiveProject
+    ↪ func (*BoltProvider) GetActiveProject
+    ↪ func hashTodo
+provider.go
+db
+boltstore.go
+    ↪ func CheckDBVersionOrExit
+    ↪ func GetDBVersion
+    ↪ func SetDBVersion
+    ↪ func ListBuckets
+    ↪ func FetchProjectTodos
+    ↪ func SaveTodo
+    ↪ func DeleteTodoById
+    ↪ func SetActiveProject
+    ↪ func GetActiveproject
+    ↪ func hashTodo
+migrate.go
+    ↪ func hashFileAndText
+    ↪ func MigrateOldKeys
+sqlite.go
+extract
+extract.go
+    ↪ func getLog
+    ↪ func hashTodo
+    ↪ func internalRun
+    ↪ func Run
+    ↪ func RunWithProgress
+    ↪ func removeTodos
+    ↪ func isDBLocked
+githubsync
+sync.go
+    ↪ func NewGitHubClient
+    ↪ func CreateIssueIfNotExists
+    ↪ func FetchAllOpenIssues
+    ↪ func UpdateIssueIfNeeded
+    ↪ func CloseDeletedTodos
+    ↪ func CloseIssueIfExists
+    ↪ func hasLabel
+helper
+ptr.go
+    ↪ func String
+    ↪ func Int
+    ↪ func Bool
+    ↪ func Float64
+logging
+logger.go
+    ↪ func Init
+    ↪ func TUI
+    ↪ func WEB
+    ↪ func Extract
+    ↪ func ExitWithError
+ui
+actions.go
+    ↪ func StartWebServerCmd
+    ↪ func StopWebServerCmd
+    ↪ func (model) RunExtractionCmd
+    ↪ func mainMenuChoices
+    ↪ func projectSettingsMenuChoices
+    ↪ func CheckWebServerStatusCmd
+model.go
+    ↪ func InitialModel
+    ↪ func (model) Init
+    ↪ func (*model) resetToMainMenu
+    ↪ func (*model) resetToProjectSettings
+project_settings.go
+    ↪ func (model) updateProjectSettings
+    ↪ func (model) updateListProjects
+    ↪ func markActiveProject
+    ↪ func stripActiveSuffix
+styles.go
+update.go
+    ↪ func (model) Update
+    ↪ func (model) handleSelection
+    ↪ func (model) withSpinner
+    ↪ func clearStatus
+    ↪ func readProgressChan
+view.go
+    ↪ func (model) View
+logs
+extract.log
+tui.log
+webserver.log
+static
+styles.css
+templates
+projects.html
+todos.html
+todos.db
+todos.sqlite
+web
+control.go
+    ↪ func StartWebServerDetached
+    ↪ func WaitForWebServer
+    ↪ func StopWebServer
+    ↪ func cleanup
+    ↪ func isZombie
+    ↪ func IsWebServerRunning
+    ↪ func readPID
+doc.go
+docs
+docs.go
+    ↪ func init
+swagger.json
+swagger.yaml
+logger.go
+    ↪ func getLog
+middleware.go
+    ↪ func AuthenticateAPIKey
+webserver.go
+    ↪ func init
+    ↪ func StartServer
+    ↪ func ShutdownServer
+    ↪ func projectsHandler
+    ↪ func apiProjectHandler
+    ↪ func todosHandler
+    ↪ func apiTodosHandler
+webserver
+webserver.log

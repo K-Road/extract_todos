@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	if err := extract.Run(); err != nil {
+	if err := extract.Run("", nil); err != nil {
 		log.Fatalf("Failed to run extract: %v", err)
 	}
 }

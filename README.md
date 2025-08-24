@@ -37,3 +37,70 @@ Send SIGTERM
 Wait for process exit
 
 Remove the binary and PID file
+
+
+
+
+ ┌───────────────┐
+ │     TUI       │
+ │ (open DB conn)│
+ │  - show menu  │
+ │  - select proj│
+ └───────┬───────┘
+         │ start
+         v
+ ┌───────────────┐
+ │  Webserver    │   <-- separate process
+ │ (own DB conn) │
+ │  - serve HTTP │
+ │  - GitHub sync│
+ └───────────────┘
+         │
+         │ stop (when extraction runs)
+         v
+ ┌───────────────┐
+ │  Extraction   │
+ │ (exclusive DB │
+ │   read/write) │
+ └───────────────┘
+         │
+         │ restart webserver
+         v
+ ┌───────────────┐
+ │  Webserver    │  (new DB conn)
+ └───────────────┘
+
+
+ ┌───────────────┐
+ │     TUI       │
+ │ (open DB conn)│
+ │  - show menu  │
+ │  - select proj│
+ └───────┬───────┘
+         │ start
+         v
+ ┌───────────────┐
+ │  Webserver    │   <-- separate process
+ │ (calls       │
+ │  ProviderFactory)
+ │  to get DB    │
+ │  connection) │
+ │  - serve HTTP │
+ │  - GitHub sync│
+ └───────────────┘
+         │
+         │ stop (when extraction runs)
+         v
+ ┌───────────────┐
+ │  Extraction   │
+ │ (calls       │
+ │  ProviderFactory)
+ │  to get DB    │
+ │  - read/write │
+ └───────────────┘
+         │
+         │ restart webserver
+         v
+ ┌───────────────┐
+ │  Webserver    │  (new DB conn via ProviderFactory)
+ └───────────────┘
