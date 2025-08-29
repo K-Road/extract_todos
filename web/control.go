@@ -114,7 +114,8 @@ func StopWebServer() error {
 	}
 
 	//send SIGINT
-	if err := process.Signal(syscall.SIGTERM); err != nil {
+	//if err := process.Signal(syscall.SIGTERM); err != nil {
+	if err := syscall.Kill(-pid, syscall.SIGTERM); err != nil {
 		return fmt.Errorf("Failed to send interrupt signal to webserver with PID %d: %v", pid, err)
 	}
 	getLog().Printf("Sent SIGTERM to process %d\n", pid)
@@ -140,6 +141,7 @@ func StopWebServer() error {
 				return nil
 			}
 		}
+		getLog().Printf("tick")
 	}
 }
 

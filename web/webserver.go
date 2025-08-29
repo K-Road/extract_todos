@@ -105,13 +105,13 @@ func StartServer(factory config.ProviderFactory) {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
-	//go func() {
-	//run webserver
-	getLog().Println("Starting Server on :8080")
-	if err := server.ListenAndServe(); err != http.ErrServerClosed {
-		getLog().Fatalf("HTTP server error: %v", err)
-	}
-	//}()
+	go func() {
+		//run webserver
+		getLog().Println("Starting Server on :8080")
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			getLog().Fatalf("HTTP server error: %v", err)
+		}
+	}()
 
 	<-stop
 	ShutdownServer()
