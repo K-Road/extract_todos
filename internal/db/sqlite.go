@@ -7,23 +7,34 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+type DB struct {
+	Conn *sql.DB
+}
+
 // Open connection to sqlite DB
-func OpenDB(path string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", path)
+func OpenDB(path string) (*DB, error) {
+	sqlDB, err := sql.Open("sqlite", path)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = db.Exec(`PRAGMA journal_mode=WAL;`)
+	_, err = sqlDB.Exec(`PRAGMA journal_mode=WAL;`)
 	if err != nil {
 		return nil, err
 	}
-	return db, nil
+	return &DB{sqlDB}, nil
+}
+
+func (db *DB) Close() error {
+	if db.Conn != nil {
+		return db.Conn.Close()
+	}
+	return nil
 }
 
 // Create schema if not exists
-func InitSchema(db *sql.DB) error {
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS projects (
+func InitSchema(db *DB) error {
+	_, err := db.Conn.Exec(`CREATE TABLE IF NOT EXISTS projects (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT UNIQUE NOT NULL,
 		created_at DATETIME NOT NULL,
@@ -48,8 +59,8 @@ func InitSchema(db *sql.DB) error {
 }
 
 // List all projects
-func ListProjects(db *sql.DB) ([]config.Project, error) {
-	rows, err := db.Query(`SELECT id, name, created_at, updated_at, active FROM projects`)
+func (db *DB) ListProjects() ([]config.Project, error) {
+	rows, err := db.Conn.Query(`SELECT id, name, created_at, updated_at, active FROM projects`)
 	if err != nil {
 		return nil, err
 	}
@@ -66,22 +77,46 @@ func ListProjects(db *sql.DB) ([]config.Project, error) {
 	return projects, nil
 }
 
-func FetchProjectTodos(db *sql.DB, name string) ([]config.Todo, error) {
+func (db *DB) FetchProjectTodos(name string) ([]config.Todo, error) {
 	return nil, nil
 }
 
-func DeleteTodoById(db *sql.DB, projectName, id string) error {
+func (db *DB) DeleteTodoById(projectName, id string) error {
 	return nil
 }
 
-func SaveTodo(bdb *sql.DB, projectName string, todo config.Todo) (bool, error) {
+func (db *DB) SaveTodo(projectName string, todo config.Todo) (bool, error) {
 	return false, nil
 }
 
-func SetActiveProject(db *sql.DB, projectName string) error {
-	return nil
+func (db *DB) SetActiveProject(projectName string) error {
+	tx, err := db.Conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	//set all projects to inactive
+	if _, err := tx.Exec(`UPDATE projects SET active = 0 WHERE active = 1`); err != nil {
+		return err
+	}
+
+	//set selected project to active
+	if _, err := tx.Exec(`UPDATE projects SET active = 1 WHERE name = ?`, projectName); err != nil {
+		return err
+	}
+	return tx.Commit()
+
 }
 
-func GetActiveproject(db *sql.DB) (string, error) {
-	return "", nil
+func (db *DB) GetActiveproject() (string, error) {
+	var active string
+	err := db.Conn.QueryRow(`SELECT name From projects WHERE active = 1 LIMIT 1`).Scan(&active)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", nil // No active project set
+		}
+		return "", err
+	}
+	return active, nil
 }

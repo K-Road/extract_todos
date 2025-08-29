@@ -1,7 +1,6 @@
 package data
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/K-Road/extract_todos/config"
@@ -9,7 +8,7 @@ import (
 )
 
 type SQLiteProvider struct {
-	DB *sql.DB
+	DB *db.DB
 }
 
 func NewSQLiteProvider(path string) (*SQLiteProvider, error) {
@@ -24,7 +23,7 @@ func NewSQLiteProvider(path string) (*SQLiteProvider, error) {
 }
 
 func (sp *SQLiteProvider) ListProjects() ([]string, error) {
-	projects, err := db.ListProjects(sp.DB)
+	projects, err := sp.DB.ListProjects()
 	if err != nil {
 		return nil, err
 	}
@@ -36,20 +35,20 @@ func (sp *SQLiteProvider) ListProjects() ([]string, error) {
 }
 
 func (sp *SQLiteProvider) ListProjectTodos(name string) ([]config.Todo, error) {
-	return db.FetchProjectTodos(sp.DB, name)
+	return sp.DB.FetchProjectTodos(name)
 }
 
 func (sp *SQLiteProvider) DeleteTodoById(projectName, id string) error {
-	return db.DeleteTodoById(sp.DB, projectName, id)
+	return sp.DB.DeleteTodoById(projectName, id)
 }
 
 func (sp *SQLiteProvider) SaveTodo(projectName string, todo config.Todo) (bool, error) {
-	return db.SaveTodo(sp.DB, projectName, todo)
+	return sp.DB.SaveTodo(projectName, todo)
 }
 
 // TODO add logging back
 func (sp *SQLiteProvider) RemoveTodos(projectName string, scannedTodos []config.Todo) error {
-	storedTodos, err := db.FetchProjectTodos(sp.DB, projectName)
+	storedTodos, err := sp.DB.FetchProjectTodos(projectName)
 	if err != nil {
 		return fmt.Errorf("failed to fetch todos for project %s: %w", projectName, err)
 	}
@@ -65,7 +64,7 @@ func (sp *SQLiteProvider) RemoveTodos(projectName string, scannedTodos []config.
 			//getLog().Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
 
 			// //Delete from bolt db
-			if err := db.DeleteTodoById(sp.DB, projectName, id); err != nil {
+			if err := sp.DB.DeleteTodoById(projectName, id); err != nil {
 				//getLog().Printf("Failed to delete from DB: %v", err)
 			}
 		}
@@ -85,9 +84,9 @@ func (sp *SQLiteProvider) Close() error {
 }
 
 func (sp *SQLiteProvider) SetActiveProject(name string) error {
-	return db.SetActiveProject(sp.DB, name)
+	return sp.DB.SetActiveProject(name)
 }
 
 func (sp *SQLiteProvider) GetActiveProject() (string, error) {
-	return db.GetActiveproject(sp.DB)
+	return sp.DB.GetActiveproject()
 }

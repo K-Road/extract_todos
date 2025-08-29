@@ -16,7 +16,6 @@ func StartWebServerCmd(log *log.Logger, sendMsg func(tea.Msg)) tea.Cmd {
 			log.Println("Web server is already running.")
 			return statusMsg("Webserver already running!✅")
 		}
-		//time.Sleep(2 * time.Second)
 
 		go func() {
 
@@ -28,14 +27,6 @@ func StartWebServerCmd(log *log.Logger, sendMsg func(tea.Msg)) tea.Cmd {
 				sendMsg(statusMsg("Failed to start webserver"))
 				return
 			}
-			// ch := make(chan tea.Msg)
-			// ch <- statusMsg("Starting webserver...")
-			//return statusMsg("Webserver started!✅")
-			// if err := web.WaitForWebServer(8080, 5*time.Second); err != nil {
-			// 	log.Println("Web server did not start in time:", err)
-			// 	sendMsg(statusMsg("❌ Webserver did not start in time"))
-			// 	return
-			// }
 
 			sendMsg(statusMsg("Webserver started!✅"))
 		}()

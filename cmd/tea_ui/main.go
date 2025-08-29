@@ -14,10 +14,6 @@ func main() {
 
 	//Initialize the database connection
 	dbfile := "todos.sqlite"
-	// bp := &data.BoltProvider{}
-	// if err := bp.OpenDB(dbfile); err != nil {
-	// 	log.Fatalf("Failed to open database: %v", err)
-	// }
 
 	factory := data.SQLiteFactory(dbfile)
 	dp, err := factory()
@@ -25,8 +21,6 @@ func main() {
 		log.Fatalf("Failed to create data provider: %v", err)
 	}
 	defer dp.Close()
-
-	//var dp config.DataProvider = bp
 
 	p := tea.NewProgram(ui.InitialModel(log, dp))
 	if _, err := p.Run(); err != nil {

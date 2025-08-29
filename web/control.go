@@ -29,9 +29,6 @@ func StartWebServerDetached() error {
 		return fmt.Errorf("failed to open webserver.log: %w", err)
 	}
 	//start compiled binary in detached mode
-	//script := "./webserver > webserver.log 2>&1 &" //echo $!"
-	//script := "./webserver &" //> webserver.log 2>&1 &" //echo $!"
-	//cmd := exec.Command("bash", "-c", script)
 	cmd := exec.Command("./webserver")
 	cmd.Stdout = logFile //logging.WebServerLogWriter
 	cmd.Stderr = logFile //logging.WebServerLogWriter
@@ -49,18 +46,6 @@ func StartWebServerDetached() error {
 	if err := os.WriteFile(pidFile, []byte(pidStr), 0644); err != nil {
 		return fmt.Errorf("failed to write PID file: %w", err)
 	}
-
-	// if err := WaitForWebServer(8080, 5*time.Second); err != nil {
-	// 	getLog().Printf("Webserver did not start in time: %v", err)
-	// 	_ = cmd.Process.Kill() // Kill the process if it didn't start correctly
-	// 	return fmt.Errorf("webserver did not start in time: %w", err)
-	// }
-
-	// //Zombie processes can occur if the parent process exits before the child
-	// go func() {
-	// 	_ = cmd.Wait() // Wait for the command to finish
-	// 	getLog().Println("Webserver detached process exited - Say NO! to Zombies!")
-	// }()
 
 	// Wait in a goroutine to prevent zombies
 	go func() {
@@ -158,6 +143,7 @@ func isZombie(pid int) bool {
 	}
 	return strings.Contains(string(data), "State:\tZ")
 }
+
 func IsWebServerRunning() bool {
 	pid, err := readPID()
 	if err != nil {

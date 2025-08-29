@@ -39,7 +39,11 @@ func InitialModel(logger *log.Logger, dp config.DataProvider) model {
 		progress.WithDefaultGradient(),
 		progress.WithScaledGradient("10", "200"),
 	)
-	activeProject := ""
+	activeProject, err := dp.GetActiveProject()
+	if err != nil {
+		logger.Printf("Error getting active project: %v", err)
+		activeProject = ""
+	}
 	// activeProject, err := dp.GetActiveProject()
 	// if err != nil {
 	// 	logger.Printf("Error getting active project: %v", err)

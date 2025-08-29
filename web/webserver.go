@@ -36,29 +36,7 @@ func init() {
 
 func StartServer(factory config.ProviderFactory) {
 	var err error
-	//TODO handle flag for db name
-	// dbfile, err = bolt.Open("todos.db", 0666, nil)
-	// if err != nil {
-	// 	getLog().Fatal(err)
-	// 	//getLog().Fatalf("Failed to open database: %v", err)
-	// }
 
-	//Dont need this. the PID comes from the parent process
-	// // Write PID file here
-	// pid := os.Getpid()
-	// pidStr := strconv.Itoa(pid)
-	// if err := os.WriteFile(pidFile, []byte(pidStr), 0644); err != nil {
-	// 	getLog().Fatalf("Failed to write PID file: %v", err)
-	// }
-	// getLog().Printf("Webserver started with PID %s", pidStr)
-
-	//	cfg := &config.Config{DB: dbfile}
-	// provider, err := data.NewBoltProvider("todos.db")
-	// if err != nil {
-	// 	getLog().Fatalf("Failed to open database: %v", err)
-	// }
-
-	// cfg := &config.Config{DataProvider: provider}
 	dp, err := factory()
 	if err != nil {
 		getLog().Fatalf("Failed to create data provider: %v", err)
