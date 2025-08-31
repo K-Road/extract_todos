@@ -32,30 +32,40 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 	//var todos []Todo
 	var scannedTodos []config.Todo
 	//TODO Implement this is a flag
-	root := "/home/chrode/workspace/github.com/K-Road/extract_todos/"
-	projectName := filepath.Base(strings.TrimRight(root, string(os.PathSeparator)))
+	//root := "/home/chrode/workspace/github.com/K-Road/extract_todos/"
+	root := "/home/chrode/workspace/github.com/K-Road/"
+	//projectName := filepath.Base(strings.TrimRight(root, string(os.PathSeparator)))
+
+	projectRoot := root + project
+
 	getLog().Println(root)
-	getLog().Println(projectName)
+	getLog().Println(project)
+	getLog().Println(projectRoot)
 
 	wasServerRunning := web.IsWebServerRunning()
-	if wasServerRunning {
-		getLog().Println("Webserver is running, stopping it to avoid conflicts...")
-		if err := web.StopWebServer(); err != nil {
-			return fmt.Errorf("Failed to stop webserver: %v", err)
-		}
-	}
+	//Dont need to force stop webserver anymore
+
+	// if wasServerRunning {
+	// 	getLog().Println("Webserver is running, stopping it to avoid conflicts...")
+	// 	if err := web.StopWebServer(); err != nil {
+	// 		return fmt.Errorf("Failed to stop webserver: %v", err)
+	// 	}
+	// }
 	// if web.StopWebServer() != nil {
 	// 	getLog().Println("Webserver not running or already stopped.")
 	// }
-	getLog().Println("Waiting DB lock...")
-	for i := 0; i < 10; i++ {
-		if !isDBLocked("todos.sqlite") {
-			getLog().Println("DB is not locked, proceeding...")
-			break
-		}
-		getLog().Println("DB is locked, waiting...")
-		time.Sleep(500 * time.Millisecond)
-	}
+
+	//Dont need to checm on db lock anymore
+	// getLog().Println("Waiting DB lock...")
+	// for i := 0; i < 10; i++ {
+	// 	if !isDBLocked("todos.sqlite") {
+	// 		getLog().Println("DB is not locked, proceeding...")
+	// 		break
+	// 	}
+	// 	getLog().Println("DB is locked, waiting...")
+	// 	time.Sleep(500 * time.Millisecond)
+	// }
+
 	//time.Sleep(500 * time.Millisecond)
 	//wasServerRunning := stopWebServer()
 
@@ -73,7 +83,7 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 	// }
 
 	var goFiles []string
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(projectRoot, func(path string, info os.FileInfo, err error) error {
 		if err == nil || !info.IsDir() || strings.HasSuffix(path, ".go") {
 			goFiles = append(goFiles, path)
 		}
@@ -104,7 +114,7 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 		for scanner.Scan() {
 			line := scanner.Text()
 			trimmed := strings.TrimSpace(line)
-			relPath, err := filepath.Rel(root, path)
+			relPath, err := filepath.Rel(projectRoot, path)
 			if err != nil {
 				relPath = path
 			}
@@ -116,10 +126,16 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 				}
 				scannedTodos = append(scannedTodos, todo) // Collect all todos for delete sync
 				//Check if duplicate
-				if saved, err := dp.SaveTodo(projectName, todo); err != nil {
+				status, err := dp.SaveTodo(project, todo)
+				if err != nil {
 					getLog().Println("Failed to save TODO:", err)
-				} else if saved {
+				}
+
+				switch status {
+				case config.TodoInserted:
 					getLog().Printf("New TODO saved: %s:%d %s\n", todo.File, todo.Line, todo.Text)
+				case config.TodoUpdated:
+					getLog().Printf("Updated TODO line number: %s:%d %s\n", todo.File, todo.Line, todo.Text)
 				}
 			}
 			lineNum++
@@ -132,17 +148,17 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 	getLog().Println("DEBUG: Listing all entries in DB")
 	//viewTodos(bdb)
 
-	err = dp.RemoveTodos(projectName, scannedTodos)
+	err = dp.RemoveTodos(project, scannedTodos)
 
 	getLog().Println("DEBUG: Listing all entries in DB after removal")
 	//viewTodos(bdb)
 
 	//Restart webserver
 	if wasServerRunning {
-		getLog().Println("Restarting webserver...")
-		if err := web.StartWebServerDetached(); err != nil {
-			getLog().Printf("Failed to restart webserver: %v", err)
-		}
+		getLog().Println("Webserver was running..Do some cache logic refresh??")
+		// if err := web.StartWebServerDetached(); err != nil {
+		// 	getLog().Printf("Failed to restart webserver: %v", err)
+		// }
 	}
 	updateProgress(1)
 	return nil

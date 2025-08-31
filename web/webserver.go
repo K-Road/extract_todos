@@ -154,7 +154,7 @@ func todosHandler(w http.ResponseWriter, r *http.Request, dp config.DataProvider
 	name := r.PathValue("name")
 	todos, err := dp.ListProjectTodos(name)
 	if err != nil {
-		http.Error(w, "DB Error", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("DB Error: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -163,7 +163,7 @@ func todosHandler(w http.ResponseWriter, r *http.Request, dp config.DataProvider
 		"Todos":   todos,
 	})
 	if err != nil {
-		http.Error(w, "Template error", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Template error: %v", err), http.StatusInternalServerError)
 	}
 }
 

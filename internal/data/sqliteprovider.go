@@ -5,6 +5,7 @@ import (
 
 	"github.com/K-Road/extract_todos/config"
 	"github.com/K-Road/extract_todos/internal/db"
+	"github.com/K-Road/extract_todos/internal/helper"
 )
 
 type SQLiteProvider struct {
@@ -34,16 +35,55 @@ func (sp *SQLiteProvider) ListProjects() ([]string, error) {
 	return names, nil
 }
 
-func (sp *SQLiteProvider) ListProjectTodos(name string) ([]config.Todo, error) {
-	return sp.DB.FetchProjectTodos(name)
+func (sp *SQLiteProvider) ListProjectTodos(name string) ([]config.WebTodo, error) {
+	todos, err := sp.DB.FetchProjectTodos(name)
+	if err != nil {
+		return nil, err
+	}
+
+	webTodos := make([]config.WebTodo, len(todos))
+	for i, t := range todos {
+		webTodos[i] = config.WebTodo{
+			ID:   t.ID,
+			File: t.File,
+			Line: t.Line,
+			Text: t.Text,
+		}
+	}
+	return webTodos, nil
 }
 
 func (sp *SQLiteProvider) DeleteTodoById(projectName, id string) error {
 	return sp.DB.DeleteTodoById(projectName, id)
 }
 
-func (sp *SQLiteProvider) SaveTodo(projectName string, todo config.Todo) (bool, error) {
-	return sp.DB.SaveTodo(projectName, todo)
+func (sp *SQLiteProvider) SaveTodo(projectName string, todo config.Todo) (config.TodoStatus, error) {
+	hash := helper.HashTodo(todo.File, todo.Text)
+
+	projectID, err := sp.DB.GetProjectID(projectName)
+	if err != nil {
+		return config.TodoUnchanged, fmt.Errorf("project %q not found: %w", projectName, err)
+	}
+
+	existing, err := sp.DB.GetTodoByHash(hash)
+	if err == nil {
+		//hash exists -> check line
+		if existing.Line != todo.Line {
+			if err := sp.DB.UpdateTodoLine(existing.ID, todo.Line); err != nil {
+				return config.TodoUnchanged, err
+			}
+			return config.TodoUpdated, nil
+		}
+		return config.TodoUnchanged, nil
+
+	}
+
+	//New todo
+	if err := sp.DB.InsertTodo(projectID, todo, hash); err != nil {
+		return config.TodoUnchanged, err
+	}
+	return config.TodoInserted, nil
+	//return sp.DB.SaveTodo(projectName, todo)
 }
 
 // TODO add logging back
@@ -73,7 +113,7 @@ func (sp *SQLiteProvider) RemoveTodos(projectName string, scannedTodos []config.
 }
 
 func (sp *SQLiteProvider) OpenDB(path string) error {
-	return sp.OpenDB(path)
+	return nil
 }
 
 func (sp *SQLiteProvider) Close() error {
@@ -87,6 +127,6 @@ func (sp *SQLiteProvider) SetActiveProject(name string) error {
 	return sp.DB.SetActiveProject(name)
 }
 
-func (sp *SQLiteProvider) GetActiveProject() (string, error) {
-	return sp.DB.GetActiveproject()
+func (sp *SQLiteProvider) GetActiveProject() (string, int, error) {
+	return sp.DB.GetActiveProject()
 }

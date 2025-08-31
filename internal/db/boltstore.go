@@ -1,11 +1,8 @@
 package db
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 
-	"github.com/K-Road/extract_todos/config"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -170,8 +167,8 @@ func ListBuckets(db *bolt.DB) ([]string, error) {
 // 	return projectName, err
 // }
 
-func hashTodo(todo config.Todo) string {
-	s := fmt.Sprintf("%s:%s", todo.File, todo.Text)
-	h := sha256.Sum256([]byte(s))
-	return hex.EncodeToString(h[:])
-}
+// func hashTodo(todo config.Todo) string {
+// 	s := fmt.Sprintf("%s:%s", todo.File, todo.Text)
+// 	h := sha256.Sum256([]byte(s))
+// 	return hex.EncodeToString(h[:])
+// }

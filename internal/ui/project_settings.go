@@ -87,8 +87,9 @@ func (m model) updateListProjects(msg tea.KeyMsg) (model, tea.Cmd) {
 	return m, nil
 }
 
+// Do I need this anymore?
 func markActiveProject(projects []string, m model) []string {
-	active, _ := m.dataProvider.GetActiveProject()
+	active, _, _ := m.dataProvider.GetActiveProject()
 	out := make([]string, len(projects))
 	for i, p := range projects {
 		if p == active {
