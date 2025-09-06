@@ -89,7 +89,7 @@ func (db *DB) ListProjects() ([]config.Project, error) {
 
 func (db *DB) FetchProjectTodos(name string) ([]config.Todo, error) {
 
-	rows, err := db.Conn.Query(`SELECT t.id, t.project_id, t.file, t.line, t.text, t.created_at, t.updated_at
+	rows, err := db.Conn.Query(`SELECT t.id, t.project_id, t.file, t.line, t.text, t.hash,t.created_at, t.updated_at
 	FROM todos t
 	JOIN projects p ON t.project_id = p.id
 	WHERE p.name = ?`, name)
@@ -101,7 +101,7 @@ func (db *DB) FetchProjectTodos(name string) ([]config.Todo, error) {
 	var todos []config.Todo
 	for rows.Next() {
 		var t config.Todo
-		if err := rows.Scan(&t.ID, &t.ProjectID, &t.File, &t.Line, &t.Text, &t.CreatedAt, &t.UpdatedAt); err != nil {
+		if err := rows.Scan(&t.ID, &t.ProjectID, &t.File, &t.Line, &t.Text, &t.Hash, &t.CreatedAt, &t.UpdatedAt); err != nil {
 			return nil, err
 		}
 		todos = append(todos, t)
@@ -109,11 +109,22 @@ func (db *DB) FetchProjectTodos(name string) ([]config.Todo, error) {
 	return todos, nil
 }
 
-func (db *DB) DeleteTodoById(projectName, id string) error {
-	return nil
+func (db *DB) DeleteTodoById(id int) error {
+	tx, err := db.Conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.Exec(`DELETE FROM todos WHERE id = ?`, id)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+
 }
 
 // SaveTodo writes a new todo to the database, updates the line number if it already but the line number has changed
+// Pull this back to data package
 func (db *DB) SaveTodo(projectName string, todo config.Todo) (config.TodoStatus, error) {
 	//Uses a hash of the filename and the text of the todo to determine if it altready exists
 	hash := helper.HashTodo(todo.File, todo.Text)
@@ -191,17 +202,24 @@ func (db *DB) SetActiveProject(projectName string) error {
 	}
 	defer tx.Rollback()
 
-	//set all projects to inactive
-	if _, err := tx.Exec(`UPDATE projects SET active = 0 WHERE active = 1`); err != nil {
-		return err
-	}
-
 	//set selected project to active
 	if _, err := tx.Exec(`UPDATE projects SET active = 1 WHERE name = ?`, projectName); err != nil {
 		return err
 	}
 	return tx.Commit()
+}
 
+func (db *DB) UnSetActiveProjects() error {
+	tx, err := db.Conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec(`UPDATE projects SET active = 0 WHERE active = 1`); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (db *DB) GetActiveProject() (string, int, error) {

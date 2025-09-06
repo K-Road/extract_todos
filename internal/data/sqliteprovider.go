@@ -53,8 +53,8 @@ func (sp *SQLiteProvider) ListProjectTodos(name string) ([]config.WebTodo, error
 	return webTodos, nil
 }
 
-func (sp *SQLiteProvider) DeleteTodoById(projectName, id string) error {
-	return sp.DB.DeleteTodoById(projectName, id)
+func (sp *SQLiteProvider) DeleteTodoById(id int) error {
+	return sp.DB.DeleteTodoById(id)
 }
 
 func (sp *SQLiteProvider) SaveTodo(projectName string, todo config.Todo) (config.TodoStatus, error) {
@@ -92,19 +92,19 @@ func (sp *SQLiteProvider) RemoveTodos(projectName string, scannedTodos []config.
 	if err != nil {
 		return fmt.Errorf("failed to fetch todos for project %s: %w", projectName, err)
 	}
-	scannedIDs := make(map[string]struct{})
+	scannedHashes := make(map[string]struct{})
 	for _, todo := range scannedTodos {
-		id := hashTodo(todo)
-		scannedIDs[id] = struct{}{}
+		hash := hashTodo(todo)
+		scannedHashes[hash] = struct{}{}
 	}
 
 	for _, todo := range storedTodos {
-		id := hashTodo(todo)
-		if _, exists := scannedIDs[id]; !exists {
+		//id := hashTodo(todo) //dont need now have hash in db
+		if _, exists := scannedHashes[todo.Hash]; !exists {
 			//getLog().Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
 
-			// //Delete from bolt db
-			if err := sp.DB.DeleteTodoById(projectName, id); err != nil {
+			// //Delete from db
+			if err := sp.DB.DeleteTodoById(todo.ID); err != nil {
 				//getLog().Printf("Failed to delete from DB: %v", err)
 			}
 		}
@@ -124,6 +124,9 @@ func (sp *SQLiteProvider) Close() error {
 }
 
 func (sp *SQLiteProvider) SetActiveProject(name string) error {
+	if err := sp.DB.UnSetActiveProjects(); err != nil {
+		return err
+	}
 	return sp.DB.SetActiveProject(name)
 }
 
