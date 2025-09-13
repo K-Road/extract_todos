@@ -12,6 +12,8 @@ var (
 	WebServerLogWriter *lumberjack.Logger
 	ExtractLogger      *log.Logger
 	TUILogger          *log.Logger
+	DBLogger           *log.Logger
+	DATALogger         *log.Logger
 )
 
 func Init() {
@@ -39,6 +41,22 @@ func Init() {
 		MaxAge:     30,
 		Compress:   true,
 	}, "TUI", log.LstdFlags|log.Lshortfile)
+
+	DBLogger = log.New(&lumberjack.Logger{
+		Filename:   "./logs/db.log",
+		MaxSize:    10,
+		MaxBackups: 3,
+		MaxAge:     30,
+		Compress:   true,
+	}, "DB", log.LstdFlags|log.Lshortfile)
+
+	DATALogger = log.New(&lumberjack.Logger{
+		Filename:   "./logs/data.log",
+		MaxSize:    10,
+		MaxBackups: 3,
+		MaxAge:     30,
+		Compress:   true,
+	}, "DATA", log.LstdFlags|log.Lshortfile)
 }
 
 func TUI() *log.Logger {
@@ -49,6 +67,12 @@ func WEB() *log.Logger {
 }
 func Extract() *log.Logger {
 	return ExtractLogger
+}
+func DB() *log.Logger {
+	return DBLogger
+}
+func DATA() *log.Logger {
+	return DATALogger
 }
 
 func ExitWithError(log *log.Logger, msg string, err error) {

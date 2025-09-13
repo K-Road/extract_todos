@@ -101,11 +101,11 @@ func (sp *SQLiteProvider) RemoveTodos(projectName string, scannedTodos []config.
 	for _, todo := range storedTodos {
 		//id := hashTodo(todo) //dont need now have hash in db
 		if _, exists := scannedHashes[todo.Hash]; !exists {
-			//getLog().Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
+			getLog().Printf("Detected deleted TODO: %s:%s", todo.File, todo.Text)
 
 			// //Delete from db
 			if err := sp.DB.DeleteTodoById(todo.ID); err != nil {
-				//getLog().Printf("Failed to delete from DB: %v", err)
+				getLog().Printf("Failed to delete from DB: %v", err)
 			}
 		}
 	}

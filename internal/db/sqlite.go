@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/K-Road/extract_todos/config"
-	"github.com/K-Road/extract_todos/internal/helper"
 	_ "modernc.org/sqlite"
 )
 
@@ -124,43 +123,45 @@ func (db *DB) DeleteTodoById(id int) error {
 }
 
 // SaveTodo writes a new todo to the database, updates the line number if it already but the line number has changed
-// Pull this back to data package
+// Pull this back to data package : done
 func (db *DB) SaveTodo(projectName string, todo config.Todo) (config.TodoStatus, error) {
-	//Uses a hash of the filename and the text of the todo to determine if it altready exists
-	hash := helper.HashTodo(todo.File, todo.Text)
-	var existingID, existingLine int
+	// //Uses a hash of the filename and the text of the todo to determine if it altready exists
+	// hash := helper.HashTodo(todo.File, todo.Text)
+	// var existingID, existingLine int
 
-	err := db.Conn.QueryRow(`SELECT id, line FROM todos WHERE hash = ?`, hash).Scan(&existingID, &existingLine)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			//Not found - insert new
-			_, err := db.Conn.Exec(`INSERT INTO todos (project_id, file, line, text, hash, created_at, updated_at)
-			VALUES(
-			(SELECT id FROM projects WHERE name = ?),
-			?,?,?,?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-			)
-			`, projectName, todo.File, todo.Line, todo.Text, hash)
-			if err != nil {
-				return config.TodoUnchanged, err
-			}
-			return config.TodoInserted, nil
-		}
-		return config.TodoUnchanged, err
-	}
+	// err := db.Conn.QueryRow(`SELECT id, line FROM todos WHERE hash = ?`, hash).Scan(&existingID, &existingLine)
+	// if err != nil {
+	// 	if err == sql.ErrNoRows {
+	// 		//Not found - insert new
+	// 		_, err := db.Conn.Exec(`INSERT INTO todos (project_id, file, line, text, hash, created_at, updated_at)
+	// 		VALUES(
+	// 		(SELECT id FROM projects WHERE name = ?),
+	// 		?,?,?,?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+	// 		)
+	// 		`, projectName, todo.File, todo.Line, todo.Text, hash)
+	// 		if err != nil {
+	// 			return config.TodoUnchanged, err
+	// 		}
+	// 		return config.TodoInserted, nil
+	// 	}
+	// 	return config.TodoUnchanged, err
+	// }
 
-	//Found, update line number is changed.
-	if existingLine != todo.Line {
-		_, err := db.Conn.Exec(`
-		UPDATE todos
-		SET line = ?, updated_at = CURRENT_TIMESTAMP
-		WHERE id = ?
-		`, todo.Line, existingID)
-		if err != nil {
-			return config.TodoUnchanged, err
-		}
-		return config.TodoUpdated, nil
-	}
-	//Found but no change
+	// //Found, update line number is changed.
+	// if existingLine != todo.Line {
+	// 	_, err := db.Conn.Exec(`
+	// 	UPDATE todos
+	// 	SET line = ?, updated_at = CURRENT_TIMESTAMP
+	// 	WHERE id = ?
+	// 	`, todo.Line, existingID)
+	// 	if err != nil {
+	// 		return config.TodoUnchanged, err
+	// 	}
+	// 	return config.TodoUpdated, nil
+	// }
+	// //Found but no change
+	// return config.TodoUnchanged, nil
+	getLog().Println("db.SaveTodo is deprecated, use InsertTodo and GetTodoByHash instead")
 	return config.TodoUnchanged, nil
 }
 
