@@ -15,6 +15,7 @@ require (
 	github.com/swaggo/swag v1.16.4
 	go.etcd.io/bbolt v1.4.0
 	golang.org/x/oauth2 v0.30.0
+	golang.org/x/term v0.33.0
 	modernc.org/sqlite v1.38.2
 )
 

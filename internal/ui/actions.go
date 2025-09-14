@@ -58,9 +58,14 @@ func (m model) RunExtractionCmd(log *log.Logger) (tea.Model, tea.Cmd) {
 	msgCh := make(chan tea.Msg, 10)
 	m.progressChan = msgCh
 	log.Println("Running extraction command...")
+	m.showExtraction = true
+	m.extractionLogs = []string{"Starting extraction..."}
 
 	go func(project string, dp config.DataProvider) {
-		err := extract.RunWithProgress(project, dp, func(p float64) {
+		err := extract.RunWithProgress(project, dp, func(p float64, lines []string) {
+			if len(lines) > 0 {
+				msgCh <- extractionLogMsg{lines: lines}
+			}
 			msgCh <- progressMsg(p)
 		})
 		if err != nil {

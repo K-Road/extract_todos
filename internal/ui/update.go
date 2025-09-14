@@ -60,6 +60,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case progressMsg:
 		m.progressPercent = float64(msg)
+	case extractionLogMsg:
+		m.extractionLogs = append(m.extractionLogs, msg.lines...)
+		return m, nil
 
 	case doneExtractingMsg:
 		m.progressPercent = 1.0
@@ -67,6 +70,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.spinnerRunning = false
 		m.progressVisible = false
 		m.progressChan = nil
+		m.showExtraction = false
+		m.extractionLogs = append(m.extractionLogs, "Extraction complete")
+		return m, nil
 
 	case spinner.TickMsg:
 		if m.spinnerRunning {

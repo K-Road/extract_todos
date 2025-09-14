@@ -25,12 +25,18 @@ type model struct {
 	state            string // "list", "settings", "set", "add"
 	dataProvider     config.DataProvider
 	activeProject    string // currently active project
+	extractionLogs   []string
+	showExtraction   bool
 }
 type tickMsg struct{}
 type progressMsg float64
 type doneExtractingMsg struct{}
 type tickContinueMsg struct{}
 type WebServerStatusMsg bool
+type extractionLogMsg struct {
+	lines []string
+}
+type extractionDoneMsg struct{}
 
 func InitialModel(logger *log.Logger, dp config.DataProvider) model {
 	s := spinner.New(spinner.WithSpinner(spinner.Dot))

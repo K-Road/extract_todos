@@ -2,12 +2,103 @@ package ui
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 
 	"github.com/K-Road/extract_todos/web"
+	"github.com/charmbracelet/lipgloss"
 )
 
 func (m model) View() string {
+	switch {
+	case m.showExtraction:
+		return m.extractionModalView()
+	default:
+		return m.mainView()
+	}
+}
+
+func (m model) extractionModalView() string {
+	termWidth, termHeight := getTerminalSize()
+	modalWidth := termWidth - 10
+	modalHeight := termHeight - 6
+
+	logs := m.extractionLogs
+
+	start := len(logs) - modalHeight
+	if start < 0 {
+		start = 0
+	}
+	visibleLogs := logs[start:]
+
+	displayLines := make([]string, modalHeight)
+
+	// for i, line := range visibleLogs {
+	// 	truncated := truncateLine(line, modalWidth-4)
+	// 	displayLines[i] = MatrixStyle.Render(obfuscateLine(truncated, modalWidth-4))
+	// }
+	// for i := len(visibleLogs); i < modalHeight; i++ {
+	// 	displayLines[i] = ""
+	// }
+	for i := 0; i < modalHeight; i++ {
+		if i < len(visibleLogs) {
+			truncated := truncateLine(visibleLogs[i], modalWidth-4)
+			displayLines[i] = MatrixStyle.Render(obfuscateLine(truncated, modalWidth-4))
+		} else {
+			displayLines[i] = MatrixStyle.Render(randomNoiseLine(modalWidth - 4))
+		}
+	}
+
+	logsStr := strings.Join(displayLines, "\n")
+
+	logsStyle := lipgloss.NewStyle().
+		Width(modalWidth).
+		Height(modalHeight).
+		Border(lipgloss.RoundedBorder()).
+		Render(logsStr)
+
+	progressWidth := modalWidth
+	bar := m.progress.ViewAs(m.progressPercent)
+	barStyle := lipgloss.NewStyle().Width(progressWidth).Align(lipgloss.Center).Render(bar)
+
+	combined := logsStyle + "\n" + barStyle
+	return lipgloss.Place(80, 24, lipgloss.Center, lipgloss.Center, combined)
+}
+
+func truncateLine(line string, width int) string {
+	if len(line) > width {
+		return line[:width]
+	}
+	return line
+}
+
+func obfuscateLine(line string, width int) string {
+	var b strings.Builder
+	if line == "" {
+		return randomNoiseLine(width)
+	}
+	for _, r := range line {
+		if rand.Float64() < 0.3 {
+			b.WriteRune(randomMatrixChar())
+		} else {
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+func randomMatrixChar() rune {
+	r := rune(rand.Intn(94) + 33) // 33–126 are printable ASCII
+	return r
+}
+func randomNoiseLine(width int) string {
+	var b strings.Builder
+	for i := 0; i < width; i++ {
+		b.WriteRune(randomMatrixChar())
+	}
+	return b.String()
+}
+
+func (m model) mainView() string {
 	m.webServerRunning = web.IsWebServerRunning()
 	var s strings.Builder
 

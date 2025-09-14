@@ -27,7 +27,7 @@ func hashTodo(todo config.Todo) string {
 	return hex.EncodeToString(h[:])
 }
 
-func internalRun(project string, dp config.DataProvider, updateProgress func(p float64)) error {
+func internalRun(project string, dp config.DataProvider, updateProgress func(p float64, l []string)) error {
 	time.Sleep(2 * time.Second)
 	//var todos []Todo
 	var scannedTodos []config.Todo
@@ -84,22 +84,32 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 
 	var goFiles []string
 	err := filepath.Walk(projectRoot, func(path string, info os.FileInfo, err error) error {
-		if err == nil || !info.IsDir() || strings.HasSuffix(path, ".go") {
+		// if err == nil || !info.IsDir() || strings.HasSuffix(path, ".go") {
+		// 	goFiles = append(goFiles, path)
+		// }
+		if err != nil {
+			return err
+		}
+		if info.IsDir() && info.Name() == ".git" {
+			return filepath.SkipDir
+		}
+		if !info.IsDir() && strings.HasSuffix(path, ".go") {
 			goFiles = append(goFiles, path)
 		}
 		return nil
 
 	})
-	if err != nil {
-		return err
-	}
+	// if err != nil {
+	// 	return err
+	// }
 	total := len(goFiles)
 	current := 0
+	batch := make([]string, 0, 10)
 
 	for _, path := range goFiles {
 		current++
 		if updateProgress != nil {
-			updateProgress(float64(current) / float64(total))
+			updateProgress(float64(current)/float64(total), batch)
 		}
 
 		f, err := os.Open(path)
@@ -116,6 +126,12 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 		for scanner.Scan() {
 			line := scanner.Text()
 			trimmed := strings.TrimSpace(line)
+			batch = append(batch, trimmed)
+			if len(batch) >= 50 {
+				updateProgress(float64(current)/float64(total), batch)
+				batch = batch[:0]
+			}
+			//updateProgress(float64(current)/float64(total), trimmed)
 			relPath, err := filepath.Rel(projectRoot, path)
 			if err != nil {
 				relPath = path
@@ -142,8 +158,14 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 			}
 			lineNum++
 		}
+		if len(batch) > 0 {
+			updateProgress(float64(current)/float64(total), batch)
+			batch = batch[:0]
+		}
+
 		f.Close()
 	}
+	batch = append(batch, "Extraction completed")
 	getLog().Println("Finished scan")
 	//DEBUG to list all entries
 	getLog().Println("DEBUG: Listing all entries in DB")
@@ -168,7 +190,7 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 		// 	getLog().Printf("Failed to restart webserver: %v", err)
 		// }
 	}
-	updateProgress(1)
+	updateProgress(1, batch)
 	return nil
 }
 
@@ -176,7 +198,7 @@ func Run(project string, dp config.DataProvider) error {
 	return internalRun(project, dp, nil)
 }
 
-func RunWithProgress(project string, dp config.DataProvider, updateProgress func(p float64)) error {
+func RunWithProgress(project string, dp config.DataProvider, updateProgress func(p float64, l []string)) error {
 	return internalRun(project, dp, updateProgress)
 }
 
