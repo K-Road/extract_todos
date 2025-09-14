@@ -14,7 +14,8 @@ type Config struct {
 
 type DataProvider interface {
 	ListProjects() ([]string, error)
-	ListProjectTodos(name string) ([]WebTodo, error)
+	ListProjectTodos(name string) ([]Todo, error)
+	ListProjectWebTodos(name string) ([]WebTodo, error)
 	DeleteTodoById(id int) error
 	GetActiveProject() (string, int, error)
 	SetActiveProject(name string) error

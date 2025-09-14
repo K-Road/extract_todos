@@ -35,7 +35,7 @@ func (sp *SQLiteProvider) ListProjects() ([]string, error) {
 	return names, nil
 }
 
-func (sp *SQLiteProvider) ListProjectTodos(name string) ([]config.WebTodo, error) {
+func (sp *SQLiteProvider) ListProjectWebTodos(name string) ([]config.WebTodo, error) {
 	todos, err := sp.DB.FetchProjectTodos(name)
 	if err != nil {
 		return nil, err
@@ -51,6 +51,10 @@ func (sp *SQLiteProvider) ListProjectTodos(name string) ([]config.WebTodo, error
 		}
 	}
 	return webTodos, nil
+}
+
+func (sp *SQLiteProvider) ListProjectTodos(name string) ([]config.Todo, error) {
+	return sp.DB.FetchProjectTodos(name)
 }
 
 func (sp *SQLiteProvider) DeleteTodoById(id int) error {
@@ -86,7 +90,6 @@ func (sp *SQLiteProvider) SaveTodo(projectName string, todo config.Todo) (config
 	//return sp.DB.SaveTodo(projectName, todo)
 }
 
-// TODO add logging back
 func (sp *SQLiteProvider) RemoveTodos(projectName string, scannedTodos []config.Todo) error {
 	storedTodos, err := sp.DB.FetchProjectTodos(projectName)
 	if err != nil {

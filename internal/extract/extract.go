@@ -99,15 +99,17 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 	for _, path := range goFiles {
 		current++
 		if updateProgress != nil {
-			//getLog().Println("1")
 			updateProgress(float64(current) / float64(total))
-			//getLog().Println("2")
 		}
 
 		f, err := os.Open(path)
 		if err != nil {
 			return err
 		}
+
+		//TODO make customizable
+		//Set linePrefix for search
+		linePrefix := "//TODO"
 
 		scanner := bufio.NewScanner(f)
 		lineNum := 1
@@ -118,11 +120,11 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 			if err != nil {
 				relPath = path
 			}
-			if strings.HasPrefix(trimmed, "//TODO") {
+			if strings.HasPrefix(trimmed, linePrefix) {
 				todo := config.Todo{
 					File: relPath,
 					Line: lineNum,
-					Text: strings.TrimSpace(trimmed[len("//TODO"):]),
+					Text: strings.TrimSpace(trimmed[len(linePrefix):]),
 				}
 				scannedTodos = append(scannedTodos, todo) // Collect all todos for delete sync
 				//Check if duplicate
@@ -141,7 +143,6 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 			lineNum++
 		}
 		f.Close()
-
 	}
 	getLog().Println("Finished scan")
 	//DEBUG to list all entries
@@ -151,6 +152,13 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 	err = dp.RemoveTodos(project, scannedTodos)
 
 	getLog().Println("DEBUG: Listing all entries in DB after removal")
+	todos, err := dp.ListProjectTodos(project)
+	if err != nil {
+		getLog().Println("Error fetchingTodos from DB:", err)
+	} else {
+		viewTodos(todos)
+	}
+	//viewTodos(todos)
 	//viewTodos(bdb)
 
 	//Restart webserver
@@ -197,20 +205,12 @@ func RunWithProgress(project string, dp config.DataProvider, updateProgress func
 // 	return nil
 // }
 
-// func viewTodos(dp data.DataProvider) {
-// 	err := dp.View(func(tx *bolt.Tx) error {
-// 		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
-// 			getLog().Printf("Project: %s\n", name)
-// 			return b.ForEach(func(k, v []byte) error {
-// 				getLog().Printf(" - %s\n", v)
-// 				return nil
-// 			})
-// 		})
-// 	})
-// 	if err != nil {
-// 		getLog().Println("Erroring reading from DB:", err)
-// 	}
-// }
+func viewTodos(todos []config.Todo) {
+	for _, t := range todos {
+		getLog().Printf("ID: %d, File: %s, Line: %d, Text: %s, Hash: %s\n", t.ID, t.File, t.Line, t.Text, t.Hash)
+	}
+
+}
 
 func isDBLocked(path string) bool {
 	cmd := exec.Command("lsof", path)
