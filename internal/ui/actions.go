@@ -57,8 +57,10 @@ func (m model) RunExtractionCmd(log *log.Logger) (tea.Model, tea.Cmd) {
 	m.statusMessage = "Starting extraction..."
 	msgCh := make(chan tea.Msg, 10)
 	m.progressChan = msgCh
+
 	log.Println("Running extraction command...")
 	m.showExtraction = true
+
 	m.extractionLogs = []string{"Starting extraction..."}
 
 	go func(project string, dp config.DataProvider) {
@@ -78,6 +80,7 @@ func (m model) RunExtractionCmd(log *log.Logger) (tea.Model, tea.Cmd) {
 
 	return m, tea.Batch(
 		m.spinner.Tick,
+		matrixTicker(),
 		readProgressChan(msgCh),
 	)
 }

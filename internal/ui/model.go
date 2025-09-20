@@ -27,6 +27,9 @@ type model struct {
 	activeProject    string // currently active project
 	extractionLogs   []string
 	showExtraction   bool
+	streams          []Stream
+	modalHeight      int
+	modalWidth       int
 }
 type tickMsg struct{}
 type progressMsg float64

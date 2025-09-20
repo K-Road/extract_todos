@@ -80,6 +80,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.spinner, cmd = m.spinner.Update(msg)
 			cmds = append(cmds, cmd)
 		}
+	case matrixTickMsg:
+		for i := range m.streams {
+			m.streams[i].step(m.modalHeight)
+		}
+		return m, matrixTicker()
+
 	}
 
 	if m.progressVisible && m.progressChan != nil {
@@ -159,5 +165,11 @@ func readProgressChan(ch <-chan tea.Msg) tea.Cmd {
 		default:
 			return nil
 		}
+	})
+}
+
+func tick() tea.Cmd {
+	return tea.Tick(100*time.Millisecond, func(time.Time) tea.Msg {
+		return tickMsg{}
 	})
 }
