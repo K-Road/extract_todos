@@ -66,7 +66,7 @@ func (s *Stream) step(height int) {
 	s.lastUpdate = now
 
 	for i := range s.bright {
-		s.bright[i] *= 0.8 // decay factor, adjust to taste
+		s.bright[i] *= 0.9 // decay factor, adjust to taste
 		if s.bright[i] < 0.1 {
 			s.bright[i] = 0
 			s.column[i] = randomMatrixChar()
@@ -92,4 +92,13 @@ func (s *Stream) step(height int) {
 func randomMatrixChar() rune {
 	r := rune(rand.Intn(94) + 33) // 33–126 are printable ASCII
 	return r
+}
+
+func unicodeCorrupt(_ rune) rune {
+	lookalikes := []rune{'@', '#', '$', '%', '&', '*', '!', '?', '¥', '§', '¶', '•', 'ª', 'º', '©', '®', 'µ', 'ø', 'ß', '¶', 'λ', 'Ω', 'Ж', 'И', '≡'}
+	if rand.Float64() < 0.5 {
+		return lookalikes[rand.Intn(len(lookalikes))]
+	}
+
+	return randomMatrixChar()
 }

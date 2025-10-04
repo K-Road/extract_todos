@@ -52,12 +52,20 @@ func (m model) extractionModalView() string {
 				line := m.extractionLogs[logIndex]
 
 				if col < len(line) {
-					if rand.Float64() < 0.3 {
+					orig := rune(line[col])
+
+					r := rand.Float64()
+					switch {
+					case r < 0.6:
 						char = randomMatrixChar()
-					} else {
-						char = rune(line[col])
+						brightness = 0.1 + rand.Float64()*0.2
+					case r < 0.8:
+						char = unicodeCorrupt(orig)
+						brightness = 0.3 + rand.Float64()*0.3
+					default:
+						char = orig
+						brightness = 0.4 + rand.Float64()*0.4
 					}
-					brightness = 1.0
 				}
 			}
 			b.WriteString(renderChar(char, brightness))
