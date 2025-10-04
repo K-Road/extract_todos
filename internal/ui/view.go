@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
 
 	"github.com/K-Road/extract_todos/web"
@@ -18,109 +17,35 @@ func (m model) View() string {
 	}
 }
 
-func (m model) extractionModalView() string {
+func (m *model) extractionModalView() string {
 	termWidth, termHeight := getTerminalSize()
 	m.modalWidth = termWidth - 10
 	m.modalHeight = termHeight - 6
 
-	//init streams
 	if len(m.streams) == 0 {
 		m.initStreams(m.modalWidth-4, m.modalHeight)
 	}
 
-	//falling effect
+	// advance streams
 	for i := range m.streams {
 		m.streams[i].step(m.modalHeight)
 	}
 
-	displayLines := make([]string, m.modalHeight)
+	// generate full frame
+	m.displayLines = m.generateMatrixFrame()
 
-	for row := 0; row < m.modalHeight; row++ {
-		var b strings.Builder
-		for col := 0; col < m.modalWidth-4; col++ {
-			s := &m.streams[col]
-			//var char rune = ' '
-			//var brightness float64 = 0.3
-
-			// if row < len(s.column) {
-			char := s.column[row]
-			brightness := s.bright[row]
-			// }
-
-			logIndex := len(m.extractionLogs) - m.modalHeight + row
-			if logIndex >= 0 && logIndex < len(m.extractionLogs) {
-				line := m.extractionLogs[logIndex]
-
-				if col < len(line) {
-					orig := rune(line[col])
-
-					r := rand.Float64()
-					switch {
-					case r < 0.6:
-						char = randomMatrixChar()
-						brightness = 0.1 + rand.Float64()*0.2
-					case r < 0.8:
-						char = unicodeCorrupt(orig)
-						brightness = 0.3 + rand.Float64()*0.3
-					default:
-						char = orig
-						brightness = 0.4 + rand.Float64()*0.4
-					}
-				}
-			}
-			b.WriteString(renderChar(char, brightness))
-		}
-
-		displayLines[row] = b.String()
-	}
-
-	logsStr := strings.Join(displayLines, "\n")
-
+	// join lines and render modal
+	logsStr := strings.Join(m.displayLines, "\n")
 	logsStyle := lipgloss.NewStyle().
 		Width(m.modalWidth).
-		Height(m.modalHeight).
 		Border(lipgloss.RoundedBorder()).
 		Render(logsStr)
 
-	progressWidth := m.modalWidth
-	bar := m.progress.ViewAs(m.progressPercent)
-	barStyle := lipgloss.NewStyle().Width(progressWidth).Align(lipgloss.Center).Render(bar)
+	progressBar := m.progress.ViewAs(m.progressPercent)
+	barStyle := lipgloss.NewStyle().Width(m.modalWidth).Align(lipgloss.Center).Render(progressBar)
 
 	combined := logsStyle + "\n" + barStyle
 	return lipgloss.Place(termWidth, termHeight, lipgloss.Center, lipgloss.Center, combined)
-}
-
-func truncateLine(line string, width int) string {
-	if len(line) > width {
-		return line[:width]
-	}
-	return line
-}
-
-func obfuscateLine(line string, width int) string {
-	var b strings.Builder
-	if line == "" {
-		return randomNoiseLine(width)
-	}
-	for _, r := range line {
-		if rand.Float64() < 0.3 {
-			b.WriteRune(randomMatrixChar())
-		} else {
-			b.WriteRune(r)
-		}
-	}
-	for b.Len() < width {
-		b.WriteRune(randomMatrixChar())
-	}
-	return b.String()
-}
-
-func randomNoiseLine(width int) string {
-	var b strings.Builder
-	for i := 0; i < width; i++ {
-		b.WriteRune(randomMatrixChar())
-	}
-	return b.String()
 }
 
 func (m model) mainView() string {

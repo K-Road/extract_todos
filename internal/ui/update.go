@@ -81,9 +81,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		}
 	case matrixTickMsg:
-		for i := range m.streams {
-			m.streams[i].step(m.modalHeight)
-		}
+		// for i := range m.streams {
+		// 	m.streams[i].step(m.modalHeight)
+		// }
 		return m, matrixTicker()
 
 	}

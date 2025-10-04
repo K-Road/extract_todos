@@ -30,6 +30,7 @@ type model struct {
 	streams          []Stream
 	modalHeight      int
 	modalWidth       int
+	displayLines     []string
 }
 type tickMsg struct{}
 type progressMsg float64
@@ -53,18 +54,6 @@ func InitialModel(logger *log.Logger, dp config.DataProvider) model {
 		logger.Printf("Error getting active project: %v", err)
 		activeProject = ""
 	}
-	// activeProject, err := dp.GetActiveProject()
-	// if err != nil {
-	// 	logger.Printf("Error getting active project: %v", err)
-	// }
-
-	// webServerRunning := false
-	// if web.IsWebServerRunning() {
-	// 	webServerRunning = true
-	// 	logger.Println("Web server is currently running.")
-	// } else {
-	// 	logger.Println("Web server is not running.")
-	// }
 
 	m := model{
 		log: logger,
