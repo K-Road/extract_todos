@@ -13,7 +13,7 @@ import (
 type model struct {
 	log              *log.Logger
 	cursor           int
-	choices          []string
+	choices          []MenuItem
 	statusMessage    string
 	spinner          spinner.Model
 	spinnerRunning   bool
@@ -42,6 +42,11 @@ type extractionLogMsg struct {
 }
 type extractionDoneMsg struct{}
 
+type MenuItem struct {
+	Label  string
+	Action string
+}
+
 func InitialModel(logger *log.Logger, dp config.DataProvider) model {
 	s := spinner.New(spinner.WithSpinner(spinner.Dot))
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
@@ -56,15 +61,8 @@ func InitialModel(logger *log.Logger, dp config.DataProvider) model {
 	}
 
 	m := model{
-		log: logger,
-		choices: []string{
-			"Extract TODOs",
-			"Project Settings",
-			"Start Web Server",
-			"Stop Web Server",
-			"Exit TUI",
-			"Exit & Shutdown Web Server",
-		},
+		log:              logger,
+		choices:          mainMenuChoices(),
 		spinner:          s,
 		webServerRunning: false,
 		progress:         p,

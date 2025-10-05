@@ -63,27 +63,27 @@ func (m model) mainView() string {
 
 	s.WriteString("\nSelect an option:\n\n")
 
-	if m.state == "list" {
-		s.WriteString("Enter: Set Active | d: Delete | esc: Back\n\n")
-	}
+	// if m.state == "list" {
+	// 	s.WriteString("Enter: Set Active | d: Delete | esc: Back\n\n")
+	// }
 
 	for i, choice := range m.choices {
 		cursor := " "
-		label := choice
+		//label := choice
 		suffix := ""
 
-		if m.state == "list" && choice == m.activeProject {
+		if m.state == "list" && choice.Label == m.activeProject {
 			suffix = ActiveItemStyle.Render(" (active)")
-		} else if choice == "Start Web Server" && m.webServerRunning {
+		} else if choice.Label == "Start Web Server" && m.webServerRunning {
 			suffix = RunningItemStyle.Render(" (running)")
 		}
 
 		if m.cursor == i {
 			cursor = ">"
-			line := SelectedItemStyle.Render(fmt.Sprintf("%s %s", cursor, label)) + suffix
+			line := SelectedItemStyle.Render(fmt.Sprintf("%s %s", cursor, choice.Label)) + suffix
 			s.WriteString(line + "\n")
 		} else {
-			line := fmt.Sprintf("%s %s%s", cursor, label, suffix)
+			line := fmt.Sprintf("%s %s%s", cursor, choice.Label, suffix)
 			s.WriteString(line + "\n")
 		}
 	}

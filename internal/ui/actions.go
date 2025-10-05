@@ -85,22 +85,23 @@ func (m model) RunExtractionCmd(log *log.Logger) (tea.Model, tea.Cmd) {
 	)
 }
 
-func mainMenuChoices() []string {
-	return []string{
-		"Extract TODOs",
-		"Project Settings",
-		"Start Web Server",
-		"Stop Web Server",
-		"Exit TUI",
-		"Exit & Shutdown Web Server",
+func mainMenuChoices() []MenuItem {
+	return []MenuItem{
+		{"Extract TODOs", "extract"},
+		{"Github Integration", "github"},
+		{"Project Settings", "project_settings"},
+		{"Start Web Server", "start_web_server"},
+		{"Stop Web Server", "stop_web_server"},
+		{"Exit TUI", "exit_tui"},
+		{"Exit & Shutdown Web Server", "exit_shutdown_web_server"},
 	}
 }
 
-func projectSettingsMenuChoices() []string {
-	return []string{
-		"List Projects",
-		"Add Project",
-		"Back",
+func projectSettingsMenuChoices() []MenuItem {
+	return []MenuItem{
+		{"List Projects", "list_projects"},
+		{"Add Project", "add_project"},
+		{"Back", "back"},
 	}
 }
 

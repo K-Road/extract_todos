@@ -33,7 +33,11 @@ func (m model) updateProjectSettings(msg tea.KeyMsg) (model, tea.Cmd) {
 			if err != nil {
 				m.statusMessage = fmt.Sprintf("❌ Error: %v", err)
 			} else {
-				m.choices = projects
+				projectItems := make([]MenuItem, len(projects))
+				for i, name := range projects {
+					projectItems[i] = MenuItem{Label: name, Action: "select_project"}
+				}
+				m.choices = projectItems
 				m.state = "list"
 				if len(projects) > 0 {
 					m.cursor = 0
@@ -65,21 +69,24 @@ func (m model) updateListProjects(msg tea.KeyMsg) (model, tea.Cmd) {
 		}
 	case "enter":
 		if m.cursor >= 0 && m.cursor < len(m.choices) {
-			selectedProject := stripActiveSuffix(m.choices[m.cursor])
+			selected := m.choices[m.cursor]
+			selectedProject := stripActiveSuffix(selected.Label)
 			err := m.dataProvider.SetActiveProject(selectedProject)
 			if err != nil {
 				return m, func() tea.Msg {
 					return statusMsg(fmt.Sprintf("❌ Error setting active project: %v", err))
 				}
-			} else {
-				m.activeProject = selectedProject
-				projects, _ := m.dataProvider.ListProjects()
-				m.choices = markActiveProject(projects, m)
-
-				return m, func() tea.Msg {
-					return statusMsg(fmt.Sprintf("✅ Active project set to: %s", selectedProject))
-				}
 			}
+			m.activeProject = selectedProject
+			//rebuild list to mark active
+			projects, _ := m.dataProvider.ListProjects()
+			projectItems := markActiveProject(projects, m)
+			m.choices = projectItems
+
+			return m, func() tea.Msg {
+				return statusMsg(fmt.Sprintf("✅ Active project set to: %s", selectedProject))
+			}
+
 		}
 	case "d":
 		//TODO implement delete project logic
@@ -87,18 +94,17 @@ func (m model) updateListProjects(msg tea.KeyMsg) (model, tea.Cmd) {
 	return m, nil
 }
 
-// Do I need this anymore?
-func markActiveProject(projects []string, m model) []string {
+func markActiveProject(projects []string, m model) []MenuItem {
 	active, _, _ := m.dataProvider.GetActiveProject()
-	out := make([]string, len(projects))
+	items := make([]MenuItem, len(projects))
 	for i, p := range projects {
+		label := p
 		if p == active {
-			out[i] = fmt.Sprintf("%s (active)", p)
-		} else {
-			out[i] = p
+			label = fmt.Sprintf("%s (active)", p)
 		}
+		items[i] = MenuItem{Label: label, Action: "active_project"}
 	}
-	return out
+	return items
 }
 
 // stripActiveSuffix removes "(active)" so we store the clean name

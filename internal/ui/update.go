@@ -81,9 +81,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		}
 	case matrixTickMsg:
-		// for i := range m.streams {
-		// 	m.streams[i].step(m.modalHeight)
-		// }
 		return m, matrixTicker()
 
 	}
@@ -103,8 +100,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) handleSelection() (tea.Model, tea.Cmd) {
-	switch m.cursor {
-	case 0:
+	selected := m.choices[m.cursor]
+
+	switch selected.Action {
+	case "extract":
 		//Extract TODOs
 		if m.activeProject == "" {
 			return m, func() tea.Msg {
@@ -112,23 +111,23 @@ func (m model) handleSelection() (tea.Model, tea.Cmd) {
 			}
 		}
 		return m.RunExtractionCmd(m.log)
-	case 1:
+	case "project_settings":
 		m.state = "settings"
 		m.cursor = 0
 		m.choices = projectSettingsMenuChoices()
 		return m, nil
-	case 2:
+	case "start_web_server":
 		//Start web server
 		return m.withSpinner("Starting webserver...", StartWebServerCmd(m.log, func(msg tea.Msg) {
 			m.Update(msg)
 		}))
-	case 3:
+	case "stop_web_server":
 		//Stop web server
 		return m.withSpinner("Stopping webserver...", StopWebServerCmd(m.log))
-	case 4:
+	case "exit_tui":
 		//Exit TUI
 		return m, tea.Quit
-	case 5:
+	case "exit_shutdown_web_server":
 		//Exit & Shutdown web server
 		//TODO this isn't shutting down the webserver
 		return m, tea.Batch(StopWebServerCmd(m.log), tea.Quit)
