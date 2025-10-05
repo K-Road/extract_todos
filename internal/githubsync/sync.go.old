@@ -7,61 +7,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/K-Road/extract_todos/config"
 	"github.com/K-Road/extract_todos/internal/helper"
-	"github.com/K-Road/extract_todos/internal/logging"
 	"github.com/google/go-github/v72/github"
-	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 )
-
-var envLoaded bool
-
-type TodosResponse struct {
-	Project   string        `json:"project"`
-	TimeStamp string        `json:"timestamp"`
-	Todos     []config.Todo `json:"todos"`
-}
-
-func getLog() *log.Logger {
-	return logging.Extract()
-}
-
-func Run(project string, dp config.DataProvider) error {
-	return internalRun(project, dp, nil)
-}
-
-func RunWithProgress(project string, dp config.DataProvider, updateProgress func(p float64, l []string)) error {
-	return internalRun(project, dp, updateProgress)
-}
-
-func LoadEnv() error {
-	if envLoaded {
-		return nil
-	}
-	err := godotenv.Load(".env")
-	if err != nil {
-		return fmt.Errorf("Error loading .env file %w", err)
-	}
-	//TODO specify user.
-	if err := config.LoadUsersFromEnv(); err != nil {
-		return fmt.Errorf("Error loading users from env %w", err)
-	}
-	envLoaded = true
-	return nil
-}
-
-func internalRun(project string, dp config.DataProvider, updateProgress func(p float64, l []string)) error {
-	if err := LoadEnv(); err != nil {
-		return err
-	}
-
-	token := os.Getenv("GITHUB_TOKEN")
-	if token == "" {
-		return fmt.Errorf("missing GITHUB_TOKEN env var")
-	}
-	return nil
-}
 
 func NewGitHubClient() *github.Client {
 	token := os.Getenv("GITHUB_TOKEN")

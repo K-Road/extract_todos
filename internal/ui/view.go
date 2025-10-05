@@ -63,10 +63,6 @@ func (m model) mainView() string {
 
 	s.WriteString("\nSelect an option:\n\n")
 
-	// if m.state == "list" {
-	// 	s.WriteString("Enter: Set Active | d: Delete | esc: Back\n\n")
-	// }
-
 	for i, choice := range m.choices {
 		cursor := " "
 		//label := choice
@@ -92,7 +88,7 @@ func (m model) mainView() string {
 	switch m.state {
 	case "main":
 		s.WriteString("\nPress 'q' to quit.\n")
-	case "list":
+	case "list_projects":
 		s.WriteString("\nEnter: Set Active | d: Delete | esc: Back\n")
 	default:
 		s.WriteString("\nPress 'esc' to return to the main menu.\n")

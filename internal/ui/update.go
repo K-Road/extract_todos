@@ -11,15 +11,16 @@ import (
 type statusMsg string
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	//if m.state == "settings" || m.state == "list" || m.state == "set" || m.state == "add" {
-	if keyMsg, ok := msg.(tea.KeyMsg); ok {
-		switch m.state {
-		case "settings":
-			return m.updateProjectSettings(keyMsg)
-		case "list":
-			return m.updateListProjects(keyMsg)
-		case "add":
-			//TODO add add route
+	if m.state == "settings_project" || m.state == "list_projects" || m.state == "github" { // || m.state == "set" || m.state == "add" {
+		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+			switch m.state {
+			case "settings_project":
+				return m.updateProjectSettings(keyMsg)
+			case "list_projects":
+				return m.updateListProjects(keyMsg)
+			case "github":
+				return m.updateGitHubIntegration(keyMsg)
+			}
 		}
 	}
 
@@ -111,8 +112,14 @@ func (m model) handleSelection() (tea.Model, tea.Cmd) {
 			}
 		}
 		return m.RunExtractionCmd(m.log)
+	case "github":
+		//Github Integration
+		m.state = "github"
+		m.cursor = 0
+		m.choices = githubMenuChoices()
+		return m, nil
 	case "project_settings":
-		m.state = "settings"
+		m.state = "settings_project"
 		m.cursor = 0
 		m.choices = projectSettingsMenuChoices()
 		return m, nil

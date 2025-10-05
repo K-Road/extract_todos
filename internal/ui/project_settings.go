@@ -7,9 +7,9 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func (m model) updateProjectSettings(msg tea.KeyMsg) (model, tea.Cmd) {
-	if m.state != "settings" && m.state != "list" && m.state != "set" && m.state != "add" {
-		return m, nil
+func (m *model) updateProjectSettings(msg tea.KeyMsg) (model, tea.Cmd) {
+	if m.state != "settings_project" && m.state != "list_projects" && m.state != "set" && m.state != "add" {
+		return *m, nil
 	}
 
 	switch msg.String() {
@@ -25,8 +25,6 @@ func (m model) updateProjectSettings(msg tea.KeyMsg) (model, tea.Cmd) {
 			m.cursor++
 		}
 	case "enter":
-		//switch m.state {
-		//case "settings":
 		switch m.cursor {
 		case 0: //List Projects
 			projects, err := m.dataProvider.ListProjects()
@@ -38,7 +36,7 @@ func (m model) updateProjectSettings(msg tea.KeyMsg) (model, tea.Cmd) {
 					projectItems[i] = MenuItem{Label: name, Action: "select_project"}
 				}
 				m.choices = projectItems
-				m.state = "list"
+				m.state = "list_projects"
 				if len(projects) > 0 {
 					m.cursor = 0
 				} else {
@@ -52,10 +50,10 @@ func (m model) updateProjectSettings(msg tea.KeyMsg) (model, tea.Cmd) {
 		}
 	}
 
-	return m, nil
+	return *m, nil
 }
 
-func (m model) updateListProjects(msg tea.KeyMsg) (model, tea.Cmd) {
+func (m *model) updateListProjects(msg tea.KeyMsg) (model, tea.Cmd) {
 	switch msg.String() {
 	case "esc":
 		m.resetToProjectSettings()
@@ -73,17 +71,17 @@ func (m model) updateListProjects(msg tea.KeyMsg) (model, tea.Cmd) {
 			selectedProject := stripActiveSuffix(selected.Label)
 			err := m.dataProvider.SetActiveProject(selectedProject)
 			if err != nil {
-				return m, func() tea.Msg {
+				return *m, func() tea.Msg {
 					return statusMsg(fmt.Sprintf("❌ Error setting active project: %v", err))
 				}
 			}
 			m.activeProject = selectedProject
 			//rebuild list to mark active
 			projects, _ := m.dataProvider.ListProjects()
-			projectItems := markActiveProject(projects, m)
+			projectItems := markActiveProject(projects, *m)
 			m.choices = projectItems
 
-			return m, func() tea.Msg {
+			return *m, func() tea.Msg {
 				return statusMsg(fmt.Sprintf("✅ Active project set to: %s", selectedProject))
 			}
 
@@ -91,7 +89,7 @@ func (m model) updateListProjects(msg tea.KeyMsg) (model, tea.Cmd) {
 	case "d":
 		//TODO implement delete project logic
 	}
-	return m, nil
+	return *m, nil
 }
 
 func markActiveProject(projects []string, m model) []MenuItem {

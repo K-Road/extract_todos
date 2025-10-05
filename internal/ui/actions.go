@@ -111,3 +111,9 @@ func CheckWebServerStatusCmd() tea.Cmd {
 		return WebServerStatusMsg(running)
 	}
 }
+func githubMenuChoices() []MenuItem {
+	return []MenuItem{
+		{"Sync TODOs to GitHub Issues", "sync_todos"},
+		{"Back", "back"},
+	}
+}

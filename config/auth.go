@@ -1,6 +1,8 @@
 package config
 
-import "os"
+import (
+	"os"
+)
 
 type AuthUser struct {
 	Owner    string   //Github user or owner
@@ -10,7 +12,7 @@ type AuthUser struct {
 
 var Users []AuthUser
 
-func LoadUsersFromEnv() {
+func LoadUsersFromEnv() error {
 	Users = []AuthUser{
 		{
 			Owner:    "K-Road",
@@ -18,6 +20,7 @@ func LoadUsersFromEnv() {
 			Projects: []string{"*"},
 		},
 	}
+	return nil
 }
 
 func GetUsers() []AuthUser {

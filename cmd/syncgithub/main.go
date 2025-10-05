@@ -112,22 +112,6 @@ func main() {
 
 }
 
-func getTodos_old(baseURL, project string) ([]config.Todo, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/api/projects/%s/todos", baseURL, project))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var data TodosResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	if err != nil {
-		log.Fatal("Error decoding JSON:", err)
-	}
-
-	return data.Todos, nil
-}
-
 func getTodos(baseURL, project, apikey string) ([]config.Todo, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/projects/%s/todos", baseURL, project), nil)
 	if err != nil {

@@ -43,44 +43,6 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 	getLog().Println(projectRoot)
 
 	wasServerRunning := web.IsWebServerRunning()
-	//Dont need to force stop webserver anymore
-
-	// if wasServerRunning {
-	// 	getLog().Println("Webserver is running, stopping it to avoid conflicts...")
-	// 	if err := web.StopWebServer(); err != nil {
-	// 		return fmt.Errorf("Failed to stop webserver: %v", err)
-	// 	}
-	// }
-	// if web.StopWebServer() != nil {
-	// 	getLog().Println("Webserver not running or already stopped.")
-	// }
-
-	//Dont need to checm on db lock anymore
-	// getLog().Println("Waiting DB lock...")
-	// for i := 0; i < 10; i++ {
-	// 	if !isDBLocked("todos.sqlite") {
-	// 		getLog().Println("DB is not locked, proceeding...")
-	// 		break
-	// 	}
-	// 	getLog().Println("DB is locked, waiting...")
-	// 	time.Sleep(500 * time.Millisecond)
-	// }
-
-	//time.Sleep(500 * time.Millisecond)
-	//wasServerRunning := stopWebServer()
-
-	// getLog().Println("Opening DB... ")
-	// //Open bolt db
-	// bdb, err := bolt.Open("todos.db", 0600, nil)
-	// if err != nil {
-	// 	logging.ExitWithError(getLog(), "Failed to open database:", err)
-	// }
-	// defer bdb.Close()
-
-	// getLog().Println("Checking DB version...")
-	// if err = db.CheckDBVersionOrExit(bdb); err != nil {
-	// 	logging.ExitWithError(getLog(), "DB version check failed:", err)
-	// }
 
 	var goFiles []string
 	err := filepath.Walk(projectRoot, func(path string, info os.FileInfo, err error) error {
@@ -99,9 +61,7 @@ func internalRun(project string, dp config.DataProvider, updateProgress func(p f
 		return nil
 
 	})
-	// if err != nil {
-	// 	return err
-	// }
+
 	total := len(goFiles)
 	current := 0
 	batch := make([]string, 0, 10)

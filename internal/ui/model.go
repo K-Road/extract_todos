@@ -87,7 +87,7 @@ func (m *model) resetToMainMenu() {
 }
 
 func (m *model) resetToProjectSettings() {
-	m.state = "settings"
+	m.state = "settings_project"
 	m.choices = projectSettingsMenuChoices()
 	m.cursor = 0
 }

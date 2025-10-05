@@ -14,6 +14,7 @@ var (
 	TUILogger          *log.Logger
 	DBLogger           *log.Logger
 	DATALogger         *log.Logger
+	GithubLogger       *log.Logger
 )
 
 func Init() {
@@ -57,6 +58,14 @@ func Init() {
 		MaxAge:     30,
 		Compress:   true,
 	}, "DATA", log.LstdFlags|log.Lshortfile)
+
+	GithubLogger = log.New(&lumberjack.Logger{
+		Filename:   "./logs/github.log",
+		MaxSize:    10,
+		MaxBackups: 3,
+		MaxAge:     30,
+		Compress:   true,
+	}, "GITHUB", log.LstdFlags|log.Lshortfile)
 }
 
 func TUI() *log.Logger {
@@ -73,6 +82,9 @@ func DB() *log.Logger {
 }
 func DATA() *log.Logger {
 	return DATALogger
+}
+func GITHUB() *log.Logger {
+	return GithubLogger
 }
 
 func ExitWithError(log *log.Logger, msg string, err error) {
